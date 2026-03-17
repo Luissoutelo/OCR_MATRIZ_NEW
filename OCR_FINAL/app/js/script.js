@@ -2,6 +2,23 @@
 // Inicializar SDK do Zoho
 ZOHO.embeddedApp.on("PageLoad", function(data) {
     console.log("Widget carregado no Zoho CRM", data);
+
+    // Verificar se o campo NIF está preenchido
+    ZOHO.CRM.API.getRecord({
+        Entity: data.Entity,
+        RecordID: data.EntityId
+    }).then(function(response) {
+        const record = response.data[0];
+        const nif = record.NIF;
+
+        if (!nif || nif.trim() === "") {
+            // NIF não preenchido - mostrar mensagem e fechar widget
+            alert("O campo NIF não está preenchido. Apenas em entidades com NIF preenchido é possível usar este widget.");
+            ZOHO.CRM.UI.Popup.closeReload();
+        }
+    }).catch(function(error) {
+        console.error("Erro ao obter dados do registo:", error);
+    });
 });
 ZOHO.embeddedApp.init();
 
@@ -49,9 +66,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }[tipo] || 'alert alert-info';
         
         statusMessage.innerHTML = `
-            <div class="${alertClass} alert-dismissible fade show py-2" role="alert">
-                ${msg}
-                <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+            <div class="${alertClass} fade show py-2 px-3" role="alert" style="display: flex; align-items: center; justify-content: space-between;">
+                <span>${msg}</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar" style="position: static; padding: 0; margin-left: 10px;"></button>
             </div>
         `;
         
@@ -304,9 +321,7 @@ document.addEventListener('DOMContentLoaded', function () {
             adicionados++;
         });
         
-        if (adicionados > 0) {
-            showMessage(`${adicionados} ficheiro(s) adicionado(s)`, 'success');
-        }
+        
         
         updateFileList();
         updateProcessButton();
@@ -355,7 +370,6 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedFiles.splice(index, 1);
         updateFileList();
         updateProcessButton();
-        showMessage('Ficheiro removido', 'info');
     };
 
     // ===== ATUALIZAR BOTÃO PROCESSAR =====
@@ -376,7 +390,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btnProcess.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>A processar...';
         btnProcess.disabled = true;
 
-        showMessage('A enviar imagens...', 'info');
+        
 
         try {
             // Preparar FormData
@@ -399,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 dataValidade: "2030-06-14"
             };
 
-            showMessage('✅ Dados extraídos com sucesso!', 'success');
+            
             console.log('📋 Dados extraídos:', dadosSimulados);
             
             // Limpar ficheiros após sucesso
