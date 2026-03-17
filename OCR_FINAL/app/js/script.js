@@ -49,9 +49,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }[tipo] || 'alert alert-info';
         
         statusMessage.innerHTML = `
-            <div class="${alertClass} alert-dismissible fade show py-2" role="alert">
-                ${msg}
-                <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+            <div class="${alertClass} alert-dismissible fade show py-2 d-flex align-items-center" role="alert">
+                <span class="flex-grow-1">${msg}</span>
+                <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Fechar"></button>
             </div>
         `;
         
