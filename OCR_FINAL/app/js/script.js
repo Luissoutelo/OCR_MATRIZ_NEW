@@ -1,4 +1,10 @@
 // upload_page.js
+// Inicializar SDK do Zoho
+ZOHO.embeddedApp.on("PageLoad", function(data) {
+    console.log("Widget carregado no Zoho CRM", data);
+});
+ZOHO.embeddedApp.init();
+
 document.addEventListener('DOMContentLoaded', function () {
     // Elementos DOM
     const fileInput = document.getElementById('fileInput');
