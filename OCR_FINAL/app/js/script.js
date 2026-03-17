@@ -49,9 +49,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }[tipo] || 'alert alert-info';
         
         statusMessage.innerHTML = `
-            <div class="${alertClass} alert-dismissible fade show py-2" role="alert">
-                ${msg}
-                <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+            <div class="${alertClass} fade show py-2 px-3" role="alert" style="display: flex; align-items: center; justify-content: space-between;">
+                <span>${msg}</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar" style="position: static; padding: 0; margin-left: 10px;"></button>
             </div>
         `;
         
@@ -304,9 +304,7 @@ document.addEventListener('DOMContentLoaded', function () {
             adicionados++;
         });
         
-        if (adicionados > 0) {
-            showMessage(`${adicionados} ficheiro(s) adicionado(s)`, 'success');
-        }
+        
         
         updateFileList();
         updateProcessButton();
@@ -355,7 +353,6 @@ document.addEventListener('DOMContentLoaded', function () {
         selectedFiles.splice(index, 1);
         updateFileList();
         updateProcessButton();
-        showMessage('Ficheiro removido', 'info');
     };
 
     // ===== ATUALIZAR BOTÃO PROCESSAR =====
@@ -376,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btnProcess.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>A processar...';
         btnProcess.disabled = true;
 
-        showMessage('A enviar imagens...', 'info');
+        
 
         try {
             // Preparar FormData
@@ -399,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 dataValidade: "2030-06-14"
             };
 
-            showMessage('✅ Dados extraídos com sucesso!', 'success');
+            
             console.log('📋 Dados extraídos:', dadosSimulados);
             
             // Limpar ficheiros após sucesso
