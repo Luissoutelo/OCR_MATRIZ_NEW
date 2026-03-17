@@ -2,6 +2,23 @@
 // Inicializar SDK do Zoho
 ZOHO.embeddedApp.on("PageLoad", function(data) {
     console.log("Widget carregado no Zoho CRM", data);
+
+    // Verificar se o campo NIF está preenchido
+    ZOHO.CRM.API.getRecord({
+        Entity: data.Entity,
+        RecordID: data.EntityId
+    }).then(function(response) {
+        const record = response.data[0];
+        const nif = record.NIF;
+
+        if (!nif || nif.trim() === "") {
+            // NIF não preenchido - mostrar mensagem e fechar widget
+            alert("O campo NIF não está preenchido. Apenas em entidades com NIF preenchido é possível usar este widget.");
+            ZOHO.CRM.UI.Popup.closeReload();
+        }
+    }).catch(function(error) {
+        console.error("Erro ao obter dados do registo:", error);
+    });
 });
 ZOHO.embeddedApp.init();
 
