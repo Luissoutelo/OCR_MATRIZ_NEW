@@ -11,9 +11,9 @@ ZOHO.embeddedApp.on("PageLoad", function(data) {
         const record = response.data[0];
         const nif = record.NIF;
 
-        if (!nif || nif.trim() === "") {
-            // NIF não preenchido - mostrar mensagem e fechar widget
-            alert("O campo NIF não está preenchido. Apenas em entidades com NIF preenchido é possível usar este widget.");
+        if (nif && nif.trim() !== "") {
+            
+            alert("O campo NIF está preenchido. Apenas em entidades sem NIF preenchido é possível usar este widget.");
             ZOHO.CRM.UI.Popup.closeReload();
         }
     }).catch(function(error) {
