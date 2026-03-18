@@ -120,6 +120,53 @@ html, body {
             font-size: 1.1rem;
         }
 
+        /* ===== SEGUNDA PÁGINA ===== */
+        .campo-dado {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 10px 0;
+        }
+
+        .campo-dado:last-child {
+            border-bottom: none;
+        }
+
+        .campo-label {
+            font-size: 0.78rem;
+            color: #6c757d;
+            margin-bottom: 1px;
+        }
+
+        .campo-label-novo {
+            font-size: 0.78rem;
+            color: #6c757d;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .campo-valor-original {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #212529;
+            text-align: right;
+        }
+
+        .campo-input {
+            width: 140px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+
+        .badge-confianca {
+            font-size: 0.7rem;
+            padding: 2px 7px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge-alta { background-color: #d1fae5; color: #065f46; }
+        .badge-media { background-color: #fef9c3; color: #713f12; }
+        .badge-baixa { background-color: #fee2e2; color: #7f1d1d; }
+
         /* ===== ESTILOS PARA TELEMÓVEL ===== */
         @media (max-width: 576px) {
             header h1.display-6 {

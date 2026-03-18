@@ -16,7 +16,7 @@
     <div class="container-fluid px-3 py-3">
         <header class="mb-4">
             <h1 class="display-6">Leitura de Documento</h1>
-            <p class="text-secondary">Preencha os campos abaixo para processar o seu documento</p>
+            <p class="text-secondary" id="headerSubtitle">Preencha os campos abaixo para processar o seu documento</p>
         </header>
 
         <section id="view-upload">
@@ -79,9 +79,42 @@
                 </div>
             </div>
         </section>
+
+        <!-- ===== SEGUNDA PÁGINA: DADOS LIDOS ===== -->
+        <section id="view-dados" style="display:none;">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="mb-4 d-flex align-items-center gap-2">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="#198754"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                        Dados Lidos
+                    </h5>
+
+                    <div id="camposDados"></div>
+
+                    <div class="form-check mt-4 mb-3">
+                        <input class="form-check-input" type="checkbox" id="checkConfirmar">
+                        <label class="form-check-label" for="checkConfirmar">
+                            Confirmo que os dados estão corretos <span class="text-danger">*</span>
+                        </label>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button id="btnInserir" class="btn btn-success flex-grow-1" disabled>
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="white" class="me-1" style="vertical-align:middle"><path d="M17 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V7l-4-4zm-5 16a3 3 0 110-6 3 3 0 010 6zm3-10H5V5h10v4z"/></svg>
+                            Inserir Dados
+                        </button>
+                        <button id="btnVoltar" class="btn btn-outline-secondary">
+                            Voltar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/dados.js"></script>
     <script src="js/script.js"></script>
 </body>
 
