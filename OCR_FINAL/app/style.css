@@ -56,7 +56,7 @@ html, body {
         .preview-active .upload-placeholder {
             display: none;
         }
-         /* Estilos adicionais para os modos */
+         
         .modos-upload {
             display: flex;
             gap: 10px;

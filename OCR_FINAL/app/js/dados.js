@@ -51,13 +51,23 @@ function mostrarDados(dados) {
     viewUpload.style.display = 'none';
     viewDados.style.display = 'block';
 
+    // Verificar se o NIF tem 9 dígitos
+    const nifDigitos = dados.nif ? dados.nif.replace(/\D/g, '') : '';
+    if (nifDigitos.length !== 9) {
+        checkConfirmar.disabled = true;
+        btnInserir.disabled = true;
+        document.getElementById('avisoNIF').style.display = 'block';
+        document.getElementById('avisoNIF').textContent = `⚠️ O NIF obtido (${dados.nif || 'vazio'}) não conte
+         9 dígitos. Por favor ,reenicie o processo ou verifique a qualidade da imagem.`;
+    }
     // Verificar se o NIF já existe no Zoho CRM
-    if (dados.nif && dados.entity) {
+    else if (dados.entity) {
         pesquisarNIFExistente(dados.entity, dados.nif).then(function(existe) {
             if (existe) {
                 checkConfirmar.disabled = true;
                 btnInserir.disabled = true;
                 document.getElementById('avisoNIF').style.display = 'block';
+                document.getElementById('avisoNIF').textContent = `⚠️ O NIF ${dados.nif} já está registado no Zoho CRM para a entidade "${existe}".`;
             }
         });
     }

@@ -31,9 +31,10 @@ function pesquisarNIFExistente(entity, nif) {
         Type: "criteria",
         Query: "(NIF:equals:" + nif + ")"
     }).then(function(response) {
+        if (!response || !response.data || response.data.length === 0) return false;
+        const name = response.data[0]?.Account_Name || "sem nome";
         console.log("Resposta da pesquisa de NIF:", response);
-        return response && response.data && response.data.length > 0;
-        
+        return name;
     }).catch(function(error) {
         console.error("Erro ao pesquisar NIF:", error);
         return false;
