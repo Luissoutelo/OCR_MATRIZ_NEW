@@ -44,10 +44,23 @@ function mostrarDados(dados) {
 
     camposDados.innerHTML = html;
     checkConfirmar.checked = false;
+    checkConfirmar.disabled = false;
     btnInserir.disabled = true;
+    document.getElementById('avisoNIF').style.display = 'none';
     document.getElementById('headerSubtitle').textContent = 'Analise os dados obtidos pelo sistema';
     viewUpload.style.display = 'none';
     viewDados.style.display = 'block';
+
+    // Verificar se o NIF já existe no Zoho CRM
+    if (dados.nif && dados.entity) {
+        pesquisarNIFExistente(dados.entity, dados.nif).then(function(existe) {
+            if (existe) {
+                checkConfirmar.disabled = true;
+                btnInserir.disabled = true;
+                document.getElementById('avisoNIF').style.display = 'block';
+            }
+        });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -56,7 +69,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnVoltar      = document.getElementById('btnVoltar');
 
     checkConfirmar.addEventListener('change', function () {
-        btnInserir.disabled = !this.checked;
+        // Só ativa o botão se o checkbox estiver marcado E não houver aviso de NIF duplicado
+        const avisoVisivel = document.getElementById('avisoNIF').style.display !== 'none';
+        btnInserir.disabled = !this.checked || avisoVisivel;
     });
 
     btnVoltar.addEventListener('click', function () {

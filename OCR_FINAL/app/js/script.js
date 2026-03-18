@@ -1,21 +1,10 @@
 // Inicializar SDK do Zoho
+let zohoEntity = null;
+
 ZOHO.embeddedApp.on("PageLoad", function(data) {
     console.log("Widget carregado no Zoho CRM", data);
-
-    ZOHO.CRM.API.getRecord({
-        Entity: data.Entity,
-        RecordID: data.EntityId
-    }).then(function(response) {
-        const record = response.data[0];
-        const nif = record.NIF;
-
-        if (nif && nif.trim() !== "") {
-            alert("O campo NIF está preenchido. Apenas em entidades sem NIF preenchido é possível usar este widget.");
-            ZOHO.CRM.UI.Popup.closeReload();
-        }
-    }).catch(function(error) {
-        console.error("Erro ao obter dados do registo:", error);
-    });
+    zohoEntity = data.Entity;
+    verificarNIF(data);
 });
 ZOHO.embeddedApp.init();
 
@@ -301,10 +290,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const dadosOCR = {
                 nome: "Maria Silva",
-                nif: "987654321",
+                nif: "248759248",
                 numeroDocumento: "123456789",
                 dataValidade: "15/03/2029",
-                confianca: { nome: 95, numeroDocumento: 88, dataValidade: 92, nif: 87 }
+                confianca: { nome: 95, numeroDocumento: 88, dataValidade: 92, nif: 87 },
+                entity: zohoEntity
             };
 
             selectedFiles = [];
