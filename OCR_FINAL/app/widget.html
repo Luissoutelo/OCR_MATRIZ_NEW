@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    <div class="container py-4">
+    <div class="container-fluid px-3 py-3">
         <header class="mb-4">
             <h1 class="display-6">Leitura de Documento</h1>
             <p class="text-secondary">Preencha os campos abaixo para processar o seu documento</p>
@@ -22,13 +22,11 @@
         <section id="view-upload">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <div class="row g-3 mb-4">
-                        <div class="col-sm-6">
-                            <label class="form-label fw-semibold">Tipo de Documento *</label>
-                            <select class="form-select" id="tipoDocumento">
-                                <option value="cc" selected>Cartão de Cidadão</option>
-                            </select>
-                        </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Tipo de Documento *</label>
+                        <select class="form-select" id="tipoDocumento">
+                            <option value="cc" selected>Cartão de Cidadão</option>
+                        </select>
                     </div>
 
                     <!-- Botões para escolher modo -->

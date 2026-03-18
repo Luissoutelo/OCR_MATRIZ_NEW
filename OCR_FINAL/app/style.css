@@ -1,4 +1,13 @@
-  .upload-area {
+html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+.upload-area {
             border: 2px dashed #dee2e6;
             border-radius: 8px;
             padding: 2rem;
@@ -109,4 +118,56 @@
             flex: 1;
             padding: 15px;
             font-size: 1.1rem;
+        }
+
+        /* ===== ESTILOS PARA TELEMÓVEL ===== */
+        @media (max-width: 576px) {
+            header h1.display-6 {
+                font-size: 1.4rem;
+            }
+
+            header p {
+                font-size: 0.85rem;
+            }
+
+            .card-body {
+                padding: 1rem;
+            }
+
+            .modos-upload {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .btn-modo {
+                padding: 14px;
+                font-size: 1rem;
+            }
+
+            .upload-area {
+                padding: 1.5rem 1rem;
+                min-height: 150px;
+            }
+
+            .upload-area .small {
+                font-size: 0.75rem;
+            }
+
+            .btn-lg {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+
+            .list-group-item {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.85rem;
+            }
+
+            .camera-controls {
+                flex-direction: column;
+            }
+
+            .camera-controls button {
+                padding: 12px;
+            }
         }

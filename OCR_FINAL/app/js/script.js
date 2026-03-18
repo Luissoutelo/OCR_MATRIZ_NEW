@@ -442,5 +442,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ===== INICIALIZAÇÃO =====
     updateProcessButton();
+
+    // No mobile esconder o botão "Tirar Foto" — o sistema já oferece câmara no picker nativo
+    if (isMobile) {
+        btnModoCamera.style.display = 'none';
+    }
+
     console.log('✅ Widget inicializado');
 });
