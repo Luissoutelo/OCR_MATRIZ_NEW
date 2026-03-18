@@ -15,7 +15,7 @@ function verificarNIF(data) {
             alert("O campo Email não está preenchido. Apenas em entidades com Email preenchido é possível usar este widget.");
             ZOHO.CRM.UI.Popup.closeReload();
         } else if (!telefone || telefone.trim() === "") {
-            alert("O campo Telefone não está preenchido. Apenas em entidades com Telefone preenchido é possível usar este widget.");
+            alert("O campo Telemóvel não está preenchido. Apenas em entidades com Telemóvel preenchido é possível usar este widget.");
             ZOHO.CRM.UI.Popup.closeReload();
         }
 
