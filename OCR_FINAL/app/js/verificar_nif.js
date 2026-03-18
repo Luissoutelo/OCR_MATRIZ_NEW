@@ -1,4 +1,4 @@
-// ===== VERIFICAR SE A ENTIDADE JÁ TEM NIF (ao abrir o widget) =====
+// ===== VERIFICAR SE A ENTIDADE JÁ TEM NIF|EMAIL|TELEFONE (ao abrir o widget) =====
 function verificarNIF(data) {
     ZOHO.CRM.API.getRecord({
         Entity: data.Entity,
@@ -6,10 +6,19 @@ function verificarNIF(data) {
     }).then(function(response) {
         const record = response.data[0];
         const nif = record.NIF;
+        const email = record.Email;
+        const telefone = record.Telefone;
         if (nif && nif.trim() !== "") {
             alert("O campo NIF está preenchido. Apenas em entidades sem NIF preenchido é possível usar este widget.");
             ZOHO.CRM.UI.Popup.closeReload();
+        } else if (!email || email.trim() === "") {
+            alert("O campo Email não está preenchido. Apenas em entidades com Email preenchido é possível usar este widget.");
+            ZOHO.CRM.UI.Popup.closeReload();
+        } else if (!telefone || telefone.trim() === "") {
+            alert("O campo Telefone não está preenchido. Apenas em entidades com Telefone preenchido é possível usar este widget.");
+            ZOHO.CRM.UI.Popup.closeReload();
         }
+
     }).catch(function(error) {
         console.error("Erro ao obter dados do registo:", error);
     });
