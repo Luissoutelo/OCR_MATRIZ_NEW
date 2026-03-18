@@ -7,7 +7,7 @@ function verificarNIF(data) {
         const record = response.data[0];
         const nif = record.NIF;
         const email = record.Email;
-        const telefone = record.Telefone;
+        const telefone = record.Mobile_Phone;
         if (nif && nif.trim() !== "") {
             alert("O campo NIF está preenchido. Apenas em entidades sem NIF preenchido é possível usar este widget.");
             ZOHO.CRM.UI.Popup.closeReload();
@@ -31,7 +31,9 @@ function pesquisarNIFExistente(entity, nif) {
         Type: "criteria",
         Query: "(NIF:equals:" + nif + ")"
     }).then(function(response) {
+        console.log("Resposta da pesquisa de NIF:", response);
         return response && response.data && response.data.length > 0;
+        
     }).catch(function(error) {
         console.error("Erro ao pesquisar NIF:", error);
         return false;
