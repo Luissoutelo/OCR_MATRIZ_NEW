@@ -57,8 +57,8 @@ function mostrarDados(dados) {
         checkConfirmar.disabled = true;
         btnInserir.disabled = true;
         document.getElementById('avisoNIF').style.display = 'block';
-        document.getElementById('avisoNIF').textContent = `⚠️ O NIF obtido (${dados.nif || 'vazio'}) não conte
-         9 dígitos. Por favor ,reenicie o processo ou verifique a qualidade da imagem.`;
+        document.getElementById('avisoNIF').textContent = `⚠️ O NIF obtido (${dados.nif || 'vazio'}) não contém
+         9 dígitos. Por favor, reenicie o processo.`;
     }
     // Verificar se o NIF já existe no Zoho CRM
     else if (dados.entity) {
