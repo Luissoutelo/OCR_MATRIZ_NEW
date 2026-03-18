@@ -11,9 +11,9 @@ ZOHO.embeddedApp.on("PageLoad", function(data) {
         const record = response.data[0];
         const nif = record.NIF;
 
-        if (!nif || nif.trim() === "") {
-            // NIF não preenchido - mostrar mensagem e fechar widget
-            alert("O campo NIF não está preenchido. Apenas em entidades com NIF preenchido é possível usar este widget.");
+        if (nif && nif.trim() !== "") {
+            
+            alert("O campo NIF está preenchido. Apenas em entidades sem NIF preenchido é possível usar este widget.");
             ZOHO.CRM.UI.Popup.closeReload();
         }
     }).catch(function(error) {
@@ -77,14 +77,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 5000);
     }
 
-    // ===== ALTERNAR ENTRE MODOS =====
+    // ===== ALTERNAR ENTRE MODOS (só PC) =====
     btnModoCarregar.addEventListener('click', function () {
         modoAtual = 'carregar';
         btnModoCarregar.classList.add('active');
         btnModoCamera.classList.remove('active');
         uploadHint.textContent = 'Clique para selecionar ficheiros';
-        
-        // Fechar câmara se estiver aberta
         fecharCamera();
     });
 
@@ -93,11 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btnModoCamera.classList.add('active');
         btnModoCarregar.classList.remove('active');
         uploadHint.textContent = 'Clique para tirar foto';
-
-        // Se for PC, abre a câmara diretamente
-        if (!isMobile) {
-            abrirCameraPC();
-        }
+        abrirCameraPC();
     });
 
     // ===== FECHAR CÂMARA =====
@@ -213,12 +207,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ===== CLIQUE NA ÁREA DE UPLOAD =====
     uploadArea.addEventListener('click', function () {
-        if (modoAtual === 'carregar') {
+        if (isMobile) {
+            fileInput.click(); // picker nativo: câmara / galeria / ficheiros
+        } else if (modoAtual === 'carregar') {
             fileInput.click();
-        } else if (!isMobile) {
-            abrirCameraPC();
         } else {
-            cameraInput.click();
+            abrirCameraPC();
         }
     });
 
@@ -442,5 +436,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ===== INICIALIZAÇÃO =====
     updateProcessButton();
+
+    // No mobile esconder os botões de modo — o picker nativo já oferece câmara/galeria/ficheiros
+    if (isMobile) {
+        document.getElementById('modosBotoes').style.display = 'none';
+    }
+
     console.log('✅ Widget inicializado');
 });
