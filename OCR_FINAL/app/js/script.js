@@ -77,14 +77,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 5000);
     }
 
-    // ===== ALTERNAR ENTRE MODOS =====
+    // ===== ALTERNAR ENTRE MODOS (só PC) =====
     btnModoCarregar.addEventListener('click', function () {
         modoAtual = 'carregar';
         btnModoCarregar.classList.add('active');
         btnModoCamera.classList.remove('active');
         uploadHint.textContent = 'Clique para selecionar ficheiros';
-        
-        // Fechar câmara se estiver aberta
         fecharCamera();
     });
 
@@ -93,11 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btnModoCamera.classList.add('active');
         btnModoCarregar.classList.remove('active');
         uploadHint.textContent = 'Clique para tirar foto';
-
-        // Se for PC, abre a câmara diretamente
-        if (!isMobile) {
-            abrirCameraPC();
-        }
+        abrirCameraPC();
     });
 
     // ===== FECHAR CÂMARA =====
@@ -213,12 +207,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ===== CLIQUE NA ÁREA DE UPLOAD =====
     uploadArea.addEventListener('click', function () {
-        if (modoAtual === 'carregar') {
+        if (isMobile) {
+            fileInput.click(); // picker nativo: câmara / galeria / ficheiros
+        } else if (modoAtual === 'carregar') {
             fileInput.click();
-        } else if (!isMobile) {
-            abrirCameraPC();
         } else {
-            cameraInput.click();
+            abrirCameraPC();
         }
     });
 
@@ -443,9 +437,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // ===== INICIALIZAÇÃO =====
     updateProcessButton();
 
-    // No mobile esconder o botão "Tirar Foto" — o sistema já oferece câmara no picker nativo
+    // No mobile esconder os botões de modo — o picker nativo já oferece câmara/galeria/ficheiros
     if (isMobile) {
-        btnModoCamera.style.display = 'none';
+        document.getElementById('modosBotoes').style.display = 'none';
     }
 
     console.log('✅ Widget inicializado');
