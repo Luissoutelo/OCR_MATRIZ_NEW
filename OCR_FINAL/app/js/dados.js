@@ -60,14 +60,24 @@ function mostrarDados(dados) {
         document.getElementById('avisoNIF').textContent = `⚠️ O NIF obtido (${dados.nif || 'vazio'}) não contém
          9 dígitos. Por favor, reenicie o processo.`;
     }
-    // Verificar se o NIF já existe no Zoho CRM
-    else if (dados.entity) {
-        pesquisarNIFExistente(dados.entity, dados.nif).then(function(existe) {
-            if (existe) {
+    // Verificar se o NIF já existe no Zoho CRM e/ou no DMS (em paralelo)
+    else {
+        Promise.all([
+            pesquisarNIFExistente(dados.entity, dados.nif),
+            procurar_nif_dms(dados.nif).catch(() => false)
+        ]).then(function([existeZoho, existeDMS]) {
+            const avisoNIF = document.getElementById('avisoNIF');
+
+            if (existeZoho) {
+                avisoNIF.textContent = `⚠️ O NIF ${dados.nif} já está registado no Zoho CRM para a entidade "${existeZoho}".`;
+            } else if (existeDMS) {
+                avisoNIF.textContent = `⚠️ O NIF ${dados.nif} já existe no DMS.`;
+            }
+
+            if (existeZoho || existeDMS) {
                 checkConfirmar.disabled = true;
                 btnInserir.disabled = true;
-                document.getElementById('avisoNIF').style.display = 'block';
-                document.getElementById('avisoNIF').textContent = `⚠️ O NIF ${dados.nif} já está registado no Zoho CRM para a entidade "${existe}".`;
+                avisoNIF.style.display = 'block';
             }
         });
     }
