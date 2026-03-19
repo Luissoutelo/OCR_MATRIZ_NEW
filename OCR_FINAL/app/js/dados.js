@@ -73,7 +73,7 @@ function mostrarDados(dados) {
             else if (existeZoho && !existeDMS) {
                 avisoNIF.textContent = `⚠️ O NIF ${dados.nif} já está registado no Zoho CRM para a entidade "${existeZoho}".`;
             } else if (existeDMS && !existeZoho) {
-                avisoNIF.textContent = `⚠️ O NIF ${dados.nif} já existe no DMS.`;
+                avisoNIF.textContent = `⚠️ O NIF ${dados.nif} já existe associado a uma entidade no DMS.`;
             }
 
             if (existeZoho || existeDMS) {
