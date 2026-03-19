@@ -34,22 +34,51 @@ async function get_token_dms() {
         body: parameters
     });
 
-    if (!response.ok) throw new Error('Erro ao obter token DMS: ' + response.statusText);
+    if (!response.ok) {
+        const errorBody = await response.text();
+        console.error('Resposta erro DMS:', errorBody);
+        throw new Error('Erro ao obter token DMS: ' + response.statusText);
+    }
+
+    const tokenData = await response.json();
+    return { token: tokenData.access_token, url };
+}
+
+// ===== INSERIR ENTIDADE NO DMS =====
+async function inserir_entidade_dms(dadosEntidade) {
+    const { token, url } = await get_token_dms();
+
+    const response = await fetch(url + "api/Entities/InsertEntity", {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        },
+        body: JSON.stringify(dadosEntidade)
+    });
+
+    if (!response.ok) {
+        const errorBody = await response.text();
+        console.error('Resposta erro DMS:', errorBody);
+        throw new Error('Erro ao inserir entidade no DMS: ' + response.statusText);
+    }
 
     return await response.json();
 }
 
 // ===== PESQUISAR NIF NO DMS =====
 async function procurar_nif_dms(nif) {
-    const tokenData = await get_token_dms();
-    const [url] = await crmVars();
+    const { token, url } = await get_token_dms();
 
-    const response = await fetch(url + "/api/entidades?nif=" + nif, {
-        method: "GET",
+    const response = await fetch(url + "api/Entities/GetClientIdByNif", {
+        method: "POST",
         headers: {
-            "Authorization": "Bearer " + tokenData.access_token,
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json",
             "Accept": "application/json"
-        }
+        },
+        body: JSON.stringify({ nif })
     });
 
     if (!response.ok) throw new Error('Erro ao pesquisar NIF no DMS: ' + response.statusText);
