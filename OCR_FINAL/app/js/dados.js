@@ -1,10 +1,10 @@
 // ===== LÓGICA DA SEGUNDA PÁGINA (dados lidos) =====
 
 const CAMPOS = [
-    { key: 'nome',            label: 'Nome Completo',       readonly: false },
+    { key: 'nome', label: 'Nome Completo', readonly: false },
     { key: 'numeroDocumento', label: 'Número do Documento', readonly: false },
-    { key: 'dataValidade',    label: 'Data de Validade',    readonly: false },
-    { key: 'nif',             label: 'NIF',                 readonly: true  },
+    { key: 'dataValidade', label: 'Data de Validade', readonly: false },
+    { key: 'nif', label: 'NIF', readonly: true },
 ];
 
 function badgeConfianca(valor) {
@@ -13,18 +13,18 @@ function badgeConfianca(valor) {
 }
 
 function mostrarDados(dados) {
-    const viewUpload     = document.getElementById('view-upload');
-    const viewDados      = document.getElementById('view-dados');
-    const camposDados    = document.getElementById('camposDados');
+    const viewUpload = document.getElementById('view-upload');
+    const viewDados = document.getElementById('view-dados');
+    const camposDados = document.getElementById('camposDados');
     const checkConfirmar = document.getElementById('checkConfirmar');
-    const btnInserir     = document.getElementById('btnInserir');
+    const btnInserir = document.getElementById('btnInserir');
 
     let html = '';
     CAMPOS.forEach(campo => {
         const valor = dados[campo.key] || '';
-        const conf  = dados.confianca?.[campo.key];
+        const conf = dados.confianca?.[campo.key];
         const readonlyAttr = campo.readonly ? 'readonly' : '';
-        const bgReadonly   = campo.readonly ? 'style="background:#f8f9fa;"' : '';
+        const bgReadonly = campo.readonly ? 'style="background:#f8f9fa;"' : '';
         html += `
             <div class="campo-dado">
                 <div class="d-flex justify-content-between align-items-center mb-1">
@@ -65,12 +65,14 @@ function mostrarDados(dados) {
         Promise.all([
             pesquisarNIFExistente(dados.entity, dados.nif),
             procurar_nif_dms(dados.nif).catch(() => false)
-        ]).then(function([existeZoho, existeDMS]) {
+        ]).then(function ([existeZoho, existeDMS]) {
             const avisoNIF = document.getElementById('avisoNIF');
-
-            if (existeZoho) {
+            if (existeZoho && existeDMS) {
+                avisoNIF.textContent = `⚠️ O NIF ${dados.nif} já está registado no Zoho CRM para a entidade "${existeZoho}" e também no DMS.`;
+            }
+            else if (existeZoho && !existeDMS) {
                 avisoNIF.textContent = `⚠️ O NIF ${dados.nif} já está registado no Zoho CRM para a entidade "${existeZoho}".`;
-            } else if (existeDMS) {
+            } else if (existeDMS && !existeZoho) {
                 avisoNIF.textContent = `⚠️ O NIF ${dados.nif} já existe no DMS.`;
             }
 
@@ -85,8 +87,8 @@ function mostrarDados(dados) {
 
 document.addEventListener('DOMContentLoaded', function () {
     const checkConfirmar = document.getElementById('checkConfirmar');
-    const btnInserir     = document.getElementById('btnInserir');
-    const btnVoltar      = document.getElementById('btnVoltar');
+    const btnInserir = document.getElementById('btnInserir');
+    const btnVoltar = document.getElementById('btnVoltar');
 
     checkConfirmar.addEventListener('change', function () {
         // Só ativa o botão se o checkbox estiver marcado E não houver aviso de NIF duplicado
