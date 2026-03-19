@@ -1,9 +1,11 @@
 // Inicializar SDK do Zoho
 let zohoEntity = null;
+let zohoRecordId = null;
 
 ZOHO.embeddedApp.on("PageLoad", function(data) {
     console.log("Widget carregado no Zoho CRM", data);
     zohoEntity = data.Entity;
+    zohoRecordId = data.EntityId;
     verificarNIF(data);
 });
 ZOHO.embeddedApp.init();
@@ -290,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const dadosOCR = {
                 nome: "Maria Silva",
-                nif: "123456789",
+                nif: "248759248",
                 numeroDocumento: "123456789",
                 dataValidade: "15/03/2029",
                 confianca: { nome: 95, numeroDocumento: 88, dataValidade: 92, nif: 87 },

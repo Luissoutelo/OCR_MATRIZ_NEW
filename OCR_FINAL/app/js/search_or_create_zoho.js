@@ -1,3 +1,5 @@
+let dadosEntidade = null;
+
 // ===== VERIFICAR SE A ENTIDADE JÁ TEM NIF|EMAIL|TELEFONE (ao abrir o widget) =====
 function verificarNIF(data) {
     ZOHO.CRM.API.getRecord({
@@ -8,6 +10,14 @@ function verificarNIF(data) {
         const nif = record.NIF;
         const email = record.Email;
         const telefone = record.Mobile_Phone;
+
+        dadosEntidade = {
+            id: record.id,
+            entity: data.Entity,
+            email: email,
+            telefone: telefone
+        };
+
         if (nif && nif.trim() !== "") {
             alert("O campo NIF está preenchido. Apenas em entidades sem NIF preenchido é possível usar este widget.");
             ZOHO.CRM.UI.Popup.closeReload();
@@ -24,6 +34,14 @@ function verificarNIF(data) {
     });
 }
 
+// Converte DD/MM/YYYY para YYYY-MM-DD (formato Zoho)
+function converterData(data) {
+    if (!data) return null;
+    const partes = data.split('/');
+    if (partes.length !== 3) return data;
+    return `${partes[2]}-${partes[1]}-${partes[0]}`;
+}
+
 // ===== PESQUISAR SE UM NIF JÁ EXISTE NO ZOHO CRM =====
 function pesquisarNIFExistente(entity, nif) {
     return ZOHO.CRM.API.searchRecord({
@@ -38,5 +56,34 @@ function pesquisarNIFExistente(entity, nif) {
     }).catch(function(error) {
         console.error("Erro ao pesquisar NIF:", error);
         return false;
+    });
+}
+
+// ===== ATUALIZAR ENTIDADE NO ZOHO CRM =====
+function atualizarEntidadeZoho(dadosOCR) {
+    console.log('dadosEntidade:', JSON.stringify(dadosEntidade));
+    return ZOHO.CRM.API.updateRecord({
+        Entity: dadosEntidade.entity,
+        Trigger: ["workflow"],
+        APIData: {
+            id: dadosEntidade.id,
+            NIF: dadosOCR.nif,
+            Nr_de_identifica_o: dadosOCR.numeroDocumento,
+            Data_de_validade_Identifica_o: converterData(dadosOCR.dataValidade),
+            Tipo_de_Identifica_o: document.getElementById('tipoDocumento').value,
+            Account_Name:dadosOCR.nome
+        }
+    }).then(function(response) {
+        console.log('Resposta Zoho update:', JSON.stringify(response));
+        if (response && response.data && response.data[0] && response.data[0].status === 'error') {
+            throw response;
+        }
+        return response;
+    }).catch(function(error) {
+        console.error('Erro ao atualizar registo:', error);
+        if (error && error.data && error.data[0]) {
+            console.error('Detalhe do erro Zoho:', JSON.stringify(error.data[0]));
+        }
+        throw error;
     });
 }

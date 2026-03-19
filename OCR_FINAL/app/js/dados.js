@@ -107,7 +107,18 @@ document.addEventListener('DOMContentLoaded', function () {
         CAMPOS.forEach(campo => {
             dadosFinais[campo.key] = document.getElementById(`campo_${campo.key}`).value;
         });
-        // TODO: enviar dadosFinais para o Zoho CRM quando o endpoint estiver pronto
-        console.log('📤 Dados a inserir no Zoho:', dadosFinais);
+
+        btnInserir.disabled = true;
+        btnInserir.textContent = 'A inserir...';
+
+        try {
+            await atualizarEntidadeZoho(dadosFinais);
+            alert('Dados inseridos com sucesso!');
+            ZOHO.CRM.UI.Popup.closeReload();
+        } catch (error) {
+            alert('Erro ao inserir dados. Por favor tente novamente.');
+            btnInserir.disabled = false;
+            btnInserir.textContent = 'Inserir Dados';
+        }
     });
 });
