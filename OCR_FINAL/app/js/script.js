@@ -2,7 +2,7 @@
 let zohoEntity = null;
 let zohoRecordId = null;
 
-ZOHO.embeddedApp.on("PageLoad", function(data) {
+ZOHO.embeddedApp.on("PageLoad", function (data) {
     console.log("Widget carregado no Zoho CRM", data);
     zohoEntity = data.Entity;
     zohoRecordId = data.EntityId;
@@ -12,16 +12,16 @@ ZOHO.embeddedApp.init();
 
 document.addEventListener('DOMContentLoaded', function () {
     // Elementos DOM
-    const fileInput      = document.getElementById('fileInput');
-    const cameraInput    = document.getElementById('cameraInput');
-    const uploadArea     = document.getElementById('uploadArea');
-    const fileList       = document.getElementById('fileList');
-    const btnProcess     = document.getElementById('btnProcess');
-    const statusMessage  = document.getElementById('statusMessage');
-    const uploadHint     = document.getElementById('uploadHint');
+    const fileInput = document.getElementById('fileInput');
+    const cameraInput = document.getElementById('cameraInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const fileList = document.getElementById('fileList');
+    const btnProcess = document.getElementById('btnProcess');
+    const statusMessage = document.getElementById('statusMessage');
+    const uploadHint = document.getElementById('uploadHint');
     const btnModoCarregar = document.getElementById('btnModoCarregar');
-    const btnModoCamera  = document.getElementById('btnModoCamera');
-    const tipoDocumento  = document.getElementById('tipoDocumento');
+    const btnModoCamera = document.getElementById('btnModoCamera');
+    const tipoDocumento = document.getElementById('tipoDocumento');
 
     // Estado
     let selectedFiles = [];
@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fileList.innerHTML = html;
     }
 
-    window.removerFicheiro = function(index) {
+    window.removerFicheiro = function (index) {
         selectedFiles.splice(index, 1);
         updateFileList();
         updateProcessButton();
@@ -283,17 +283,23 @@ document.addEventListener('DOMContentLoaded', function () {
         btnProcess.disabled = true;
 
         try {
-            const formData = new FormData();
-            formData.append('tipoDocumento', tipoDocumento?.value || 'cc');
-            selectedFiles.forEach((file, index) => formData.append(`documento_${index + 1}`, file));
+            // const OCR_ENDPOINT = 'COLOCAR_URL_AQUI';
+            // const respostas = await Promise.all(selectedFiles.map(async (file) => {
+            //     const formData = new FormData();
+            //     formData.append('documento', file);
+            //     const res = await fetch(OCR_ENDPOINT, { method: 'POST', body: formData });
+            //     if (!res.ok) throw new Error('Erro no endpoint OCR');
+            //     return res.json();
+            // }));
+            // const dadosOCR = { ...respostas[0], ...respostas[1] };
 
-            // TODO: substituir pela chamada real ao endpoint e usar response em vez de dadosOCR
+            // TODO: remover simulação quando endpoint estiver pronto
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             const dadosOCR = {
                 nome: "Maria Silva",
-                nif: "248759248",
-                numeroDocumento: "123456789",
+                nif: "145132141",
+                numeroDocumento: "14513214",
                 dataValidade: "15/03/2029",
                 confianca: { nome: 95, numeroDocumento: 88, dataValidade: 92, nif: 87 },
                 entity: zohoEntity
@@ -312,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ===== LIMPEZA =====
-    window.addEventListener('beforeunload', function() {
+    window.addEventListener('beforeunload', function () {
         if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
     });
 

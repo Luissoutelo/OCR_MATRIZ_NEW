@@ -60,10 +60,54 @@ async function procurar_nif_dms(nif) {
     return await response.json();
 }
 
-// ===== INSERIR ENTIDADE NO DMS =====
-async function inserir_entidade_dms(dadosEntidade) {
-    const { token, url } = await get_token_dms();
+// Converte DD/MM/YYYY para DD-MM-YYYY (formato DMS)
+function converterDataDMS(data) {
+    if (!data) return null;
+    const partes = data.split('/');
+    if (partes.length !== 3) return data;
+    return `${partes[0]}-${partes[1]}-${partes[2]}`;
+}
 
+// ===== MAPEAMENTO DE NACIONALIDADE (CC → DMS) =====
+const MAPA_NACIONALIDADE = {
+    'PRT': 'PT',
+    'PT': 'PT',
+    // TODO: adicionar outros países conforme necessário
+};
+
+// ===== CONSTRUIR PAYLOAD PARA O DMS =====
+function construirPayloadDMS(dadosFinais) {
+    return {
+        name: dadosFinais.nome,
+        tin: dadosFinais.nif,
+        citizenCard: dadosFinais.numeroDocumento,
+        validateCitizenCard: converterDataDMS(dadosFinais.dataValidade),
+        email: dadosEntidade.email,
+        mobileContact: dadosEntidade.telefone,
+        birthDate: converterDataDMS(dadosFinais.dataNascimento) || "01-01-2000",      // TODO: virá do OCR
+        genderId: dadosFinais.genero || "M",                       // TODO: virá do OCR
+        nationalityCountryID: MAPA_NACIONALIDADE[dadosFinais.nacionalidade] || "PT", // TODO: virá do OCR
+        // Campos fixos obrigatórios pelo DMS
+        gdpr1MatrizCommunication: false,
+        gdpr2ProfileCreation: false,
+        gdpr3MarketingJAP: false,
+        gdpr4ContactEmail: false,
+        gdpr5ContactSMS: false,
+        gdpr6ContactPhone: false,
+        gdpr7ContactMail: false,
+        companyID: "2100",
+        taxClass_ClientID: "NC",
+        vatCashAccountingScheme: false,
+        paymentDeadLineID: "C000",
+        paymentTypeID: "TRF",
+        clientGroupID: "C000",
+        salesDestinyID: "05"
+    };
+}
+
+// ===== INSERIR ENTIDADE NO DMS =====
+async function inserir_entidade_dms(payload) {
+    const { token, url } = await get_token_dms();
     const response = await fetch(url + "api/Entities/InsertEntity", {
         method: "POST",
         headers: {
@@ -71,7 +115,7 @@ async function inserir_entidade_dms(dadosEntidade) {
             "Content-Type": "application/json",
             "Accept": "application/json"
         },
-        body: JSON.stringify(dadosEntidade)
+        body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
