@@ -4,7 +4,7 @@ const CAMPOS = [
     { key: 'nome', label: 'Nome Completo', readonly: false },
     { key: 'numeroDocumento', label: 'Número do Documento', readonly: false },
     { key: 'dataValidade', label: 'Data de Validade', readonly: false },
-    { key: 'nif', label: 'NIF', readonly: true },
+    { key: 'nif', label: 'NIF', readonly: false },
 ];
 
 function badgeConfianca(valor) {
@@ -112,13 +112,24 @@ document.addEventListener('DOMContentLoaded', function () {
         btnInserir.textContent = 'A inserir...';
 
         try {
-            await atualizarEntidadeZoho(dadosFinais);
-            alert('Dados inseridos com sucesso!');
-            ZOHO.CRM.UI.Popup.closeReload();
+            await inserir_entidade_dms(construirPayloadDMS(dadosFinais));
         } catch (error) {
-            alert('Erro ao inserir dados. Por favor tente novamente.');
+            alert('Erro ao criar entidade no DMS. Por favor tente novamente.');
             btnInserir.disabled = false;
             btnInserir.textContent = 'Inserir Dados';
+            return;
         }
+
+        try {
+            await atualizarEntidadeZoho(dadosFinais);
+        } catch (error) {
+            alert('Erro ao atualizar registo no Zoho CRM. Por favor tente novamente.');
+            btnInserir.disabled = false;
+            btnInserir.textContent = 'Inserir Dados';
+            return;
+        }
+
+        alert('Dados inseridos com sucesso!');
+        ZOHO.CRM.UI.Popup.closeReload();
     });
 });
