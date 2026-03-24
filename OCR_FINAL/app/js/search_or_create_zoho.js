@@ -71,7 +71,8 @@ function atualizarEntidadeZoho(dadosOCR) {
             Nr_de_identifica_o: dadosOCR.numeroDocumento,
             Data_de_validade_Identifica_o: converterData(dadosOCR.dataValidade),
             Tipo_de_Identifica_o: document.getElementById('tipoDocumento').value,
-            Account_Name:dadosOCR.nome
+            Account_Name:dadosOCR.nome,
+            Carregamento_OCR:true
         }
     }).then(function(response) {
         console.log('Resposta Zoho update:', JSON.stringify(response));

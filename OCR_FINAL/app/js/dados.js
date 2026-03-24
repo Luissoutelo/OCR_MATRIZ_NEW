@@ -111,14 +111,14 @@ document.addEventListener('DOMContentLoaded', function () {
         btnInserir.disabled = true;
         btnInserir.textContent = 'A inserir...';
 
-        try {
+       /* try {
             await inserir_entidade_dms(construirPayloadDMS(dadosFinais));
         } catch (error) {
             alert('Erro ao criar entidade no DMS. Por favor tente novamente.');
             btnInserir.disabled = false;
             btnInserir.textContent = 'Inserir Dados';
             return;
-        }
+        }*/
 
         try {
             await atualizarEntidadeZoho(dadosFinais);
