@@ -108,6 +108,18 @@ document.addEventListener('DOMContentLoaded', function () {
             dadosFinais[campo.key] = document.getElementById(`campo_${campo.key}`).value;
         });
 
+        // Validar data de validade com o valor final (editado pelo user)
+        const valorData = dadosFinais.dataValidade;
+        if (valorData) {
+            const dataValidade = new Date(valorData);
+            const hoje = new Date();
+            hoje.setHours(0, 0, 0, 0);
+            if (!isNaN(dataValidade) && dataValidade < hoje) {
+                alert(`⚠️ O Cartão de Cidadão está expirado (validade: ${valorData}). Não é possível inserir os dados.`);
+                return;
+            }
+        }
+
         btnInserir.disabled = true;
         btnInserir.textContent = 'A inserir...';
 /*
