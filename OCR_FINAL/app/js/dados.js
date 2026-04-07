@@ -1,10 +1,10 @@
 // ===== LÓGICA DA SEGUNDA PÁGINA (dados lidos) =====
 
 const CAMPOS = [
-    { key: 'nome', label: 'Nome Completo', readonly: false },
+    { key: 'nome', label: 'Nome Completo', readonly: false, largura: true },
     { key: 'numeroDocumento', label: 'Número do Documento', readonly: false },
     { key: 'dataValidade', label: 'Data de Validade', readonly: false },
-    { key: 'nif', label: 'NIF', readonly: false },
+    { key: 'nif', label: 'NIF', readonly: true },
 ];
 
 function badgeConfianca(valor) {
@@ -12,7 +12,14 @@ function badgeConfianca(valor) {
     return `<span class="badge-confianca ${cls}">${valor}%</span>`;
 }
 
+let _dadosOCRExtras = {};
+
 function mostrarDados(dados) {
+    _dadosOCRExtras = {
+        dataNascimento: dados.dataNascimento || null,
+        genero: dados.genero || null,
+        nacionalidade: dados.nacionalidade || null,
+    };
     const viewUpload = document.getElementById('view-upload');
     const viewDados = document.getElementById('view-dados');
     const camposDados = document.getElementById('camposDados');
@@ -25,7 +32,24 @@ function mostrarDados(dados) {
         const conf = dados.confianca?.[campo.key];
         const readonlyAttr = campo.readonly ? 'readonly' : '';
         const bgReadonly = campo.readonly ? 'style="background:#f8f9fa;"' : '';
-        html += `
+        if (campo.largura) {
+            html += `
+            <div class="campo-dado">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="campo-label">${campo.label}</span>
+                    <span class="campo-valor-original">${valor}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center gap-2">
+                    <span class="campo-label-novo" style="white-space:nowrap;">
+                        ${campo.label} (novo) ${conf !== undefined ? badgeConfianca(conf) : ''}
+                    </span>
+                    <input type="text" class="form-control form-control-sm campo-input"
+                           id="campo_${campo.key}" value="${valor}"
+                           style="width:50%;" ${readonlyAttr} ${bgReadonly}>
+                </div>
+            </div>`;
+        } else {
+            html += `
             <div class="campo-dado">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <span class="campo-label">${campo.label}</span>
@@ -40,6 +64,7 @@ function mostrarDados(dados) {
                            ${readonlyAttr} ${bgReadonly}>
                 </div>
             </div>`;
+        }
     });
 
     camposDados.innerHTML = html;
@@ -124,16 +149,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         btnInserir.disabled = true;
         btnInserir.textContent = 'A inserir...';
-/*
+
+        const dadosParaDMS = { ...dadosFinais, ..._dadosOCRExtras };
+
         try {
-            await inserir_entidade_dms(construirPayloadDMS(dadosFinais));
+            await inserir_entidade_dms(construirPayloadDMS(dadosParaDMS));
         } catch (error) {
             alert('Erro ao criar entidade no DMS. Por favor tente novamente.');
             btnInserir.disabled = false;
             btnInserir.textContent = 'Inserir Dados';
             return;
         }
-*/
+
         try {
             await atualizarEntidadeZoho(dadosFinais);
         } catch (error) {

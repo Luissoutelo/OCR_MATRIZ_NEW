@@ -79,7 +79,7 @@ async function get_token_ocr() {
     }
 
     const tokenData = await response.json();
-    return { token: tokenData.access_token, url };
+    return { token: tokenData.access_token, url, username };
 }
 
 // ===== PESQUISAR NIF NO DMS =====
@@ -162,4 +162,80 @@ async function inserir_entidade_dms(payload) {
     return result.details.statusMessage;
 }
 
+
+// ===== OCR: CONVERTER DATA COM ESPAÇOS PARA DD/MM/YYYY =====
+function formatar_data_ocr(dataStr) {
+    if (!dataStr) return null;
+    const MESES = { JAN:'01', FEV:'02', MAR:'03', ABR:'04', MAI:'05', JUN:'06', JUL:'07', AGO:'08', SET:'09', OUT:'10', NOV:'11', DEZ:'12', FEB:'02', APR:'04', MAY:'05', AUG:'08', SEP:'09', OCT:'10', DEC:'12' };
+    const partes = dataStr.trim().split(/\s+/);
+    if (partes.length !== 3) return dataStr;
+    const [dia, mes, ano] = partes;
+    const mesNum = MESES[mes.toUpperCase()] || mes.padStart(2, '0');
+    return `${dia.padStart(2, '0')}/${mesNum}/${ano}`;
+}
+
+// ===== OCR: ENVIAR UMA FOTO AO ENDPOINT =====
+async function enviar_foto_ocr(ficheiro, token, url, username) {
+    const params = new URLSearchParams({ DocumentTypeId: '3', CompanyId: '9', Username: username });
+    const formData = new FormData();
+    formData.append('File', ficheiro);
+
+    const response = await fetch(`${url}api/ai/document-extraction?${params}`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: formData
+    });
+
+    if (!response.ok) throw new Error('Erro no OCR: ' + response.statusText);
+    const dados = await response.json();
+    console.log('Resposta OCR:', dados);
+    return dados;
+}
+
+// ===== OCR: IDENTIFICAR FRENTE OU VERSO DO CC =====
+function identificar_frente_verso(resposta) {
+    const obj = resposta?.Object;
+    if (!obj) return null;
+    if (obj.FirstName != null || obj.LastName != null || obj.DocumentNumber != null) return 'frente';
+    if (obj.TaxNumber != null || obj.DateOfBirth != null || obj.HealthNumber != null) return 'verso';
+    return null;
+}
+
+// ===== OCR: PROCESSAR AS DUAS FOTOS E DEVOLVER DADOS MAPEADOS =====
+async function processar_fotos_cc(ficheiros) {
+    const { token, url, username } = await get_token_ocr();
+
+    const [resposta1, resposta2] = await Promise.all([
+        enviar_foto_ocr(ficheiros[0], token, url, username),
+        enviar_foto_ocr(ficheiros[1], token, url, username)
+    ]);
+
+    const lado1 = identificar_frente_verso(resposta1);
+    const lado2 = identificar_frente_verso(resposta2);
+
+    let frente, verso;
+    if (lado1 === 'frente') {
+        frente = resposta1.Object;
+        verso = resposta2.Object;
+    } else if (lado1 === 'verso') {
+        verso = resposta1.Object;
+        frente = resposta2.Object;
+    } else if (lado2 === 'frente') {
+        frente = resposta2.Object;
+        verso = resposta1.Object;
+    } else {
+        frente = resposta1.Object;
+        verso = resposta2.Object;
+    }
+
+    return {
+        nome: [frente?.FirstName, frente?.LastName].filter(Boolean).join(' ') || null,
+        nif: verso?.TaxNumber || frente?.TaxNumber || null,
+        numeroDocumento: frente?.DocumentNumber || null,
+        dataValidade: formatar_data_ocr(frente?.DateOfExpiration),
+        dataNascimento: formatar_data_ocr(verso?.DateOfBirth || frente?.DateOfBirth),
+        genero: frente?.Sex || null,
+        nacionalidade: frente?.Nacionality || null,
+    };
+}
 
