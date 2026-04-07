@@ -19,28 +19,18 @@ const crmVars = async () => {
 
 async function get_token_dms() {
     const [url, username, password, grant_type] = await crmVars();
+    const connectionName = AMBIENTE === 'prod' ? 'api_prod_dms_widget' : 'api_qa_dms_recebimentos_widget';
 
-    const parameters = new URLSearchParams();
-    parameters.append("grant_type", grant_type);
-    parameters.append("Username", username);
-    parameters.append("Password", password);
-
-    const response = await fetch(url + "token", {
+    const result = await ZOHO.CRM.CONNECTION.invoke(connectionName, {
+        url: url + "token",
         method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json"
-        },
-        body: parameters
+        headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
+        parameters: { grant_type, Username: username, Password: password },
+        param_type: 1
     });
 
-    if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('Resposta erro DMS:', errorBody);
-        throw new Error('Erro ao obter token DMS: ' + response.statusText);
-    }
-
-    const tokenData = await response.json();
+    console.log('DMS token result:', result);
+    const tokenData = result.details.statusMessage;
     return { token: tokenData.access_token, url };
 }
 
@@ -48,14 +38,17 @@ async function get_token_dms() {
 const crmVarsOCR = async () => {
     const urlVar = AMBIENTE === 'prod' ? 'url_api_grupo_jap' : 'url_api_grupo_jap_qa';
 
-    const [url, clientSecret, clientId, password, username] = await Promise.all([
-        ZOHO.CRM.API.getOrgVariable(urlVar).then(d => d.Success.Content),
-        ZOHO.CRM.API.getOrgVariable('client_secret_api_grupo_jap').then(d => d.Success.Content),
-        ZOHO.CRM.API.getOrgVariable('client_id_api_grupo_jap').then(d => d.Success.Content),
-        ZOHO.CRM.API.getOrgVariable('password_api_grupo_jap').then(d => d.Success.Content),
-        ZOHO.CRM.API.getOrgVariable('username_api_grupo_jap').then(d => d.Success.Content),
-    ]);
+    const nomes = [urlVar, 'client_secret_api_grupo_jap', 'cliend_id_api_grupo_jap', 'password_api_grupo_jap', 'username_api_gupo_jap'];
 
+    const respostas = await Promise.all(nomes.map(nome =>
+        ZOHO.CRM.API.getOrgVariable(nome).then(d => {
+            console.log(`OrgVar [${nome}]:`, JSON.stringify(d));
+            if (!d?.Success?.Content) throw new Error(`Variável não encontrada ou vazia: ${nome}`);
+            return d.Success.Content;
+        })
+    ));
+
+    const [url, clientSecret, clientId, password, username] = respostas;
     return { url, clientSecret, clientId, password, username };
 };
 
@@ -92,17 +85,19 @@ async function get_token_ocr() {
 // ===== PESQUISAR NIF NO DMS =====
 async function procurar_nif_dms(nif) {
     const { token, url } = await get_token_dms();
+    const connectionName = AMBIENTE === 'prod' ? 'api_prod_dms_widget' : 'api_qa_dms_recebimentos_widget';
 
-    const response = await fetch(url + "api/Entities/GetClientIdByNif?nif=" + nif, {
+    const result = await ZOHO.CRM.CONNECTION.invoke(connectionName, {
+        url: url + "api/Entities/GetClientIdByNif",
         method: "GET",
-        headers: {
-            "Authorization": "Bearer " + token,
-        },
+        headers: { "Authorization": "Bearer " + token },
+        parameters: { nif },
+        param_type: 1
     });
 
-    if (!response.ok) throw new Error('Erro ao pesquisar NIF no DMS: ' + response.statusText);
-
-    return await response.json();
+    console.log('DMS NIF result:', result);
+    const msg = result.details.statusMessage;
+    return (msg?.clientId != null && msg?.clientId !== undefined) ? msg : null;
 }
 
 // Converte DD/MM/YYYY para DD-MM-YYYY (formato DMS)
@@ -153,23 +148,18 @@ function construirPayloadDMS(dadosFinais) {
 // ===== INSERIR ENTIDADE NO DMS =====
 async function inserir_entidade_dms(payload) {
     const { token, url } = await get_token_dms();
-    const response = await fetch(url + "api/Entities/InsertEntity", {
+    const connectionName = AMBIENTE === 'prod' ? 'api_prod_dms_widget' : 'api_qa_dms_recebimentos_widget';
+
+    const result = await ZOHO.CRM.CONNECTION.invoke(connectionName, {
+        url: url + "api/Entities/InsertEntity",
         method: "POST",
-        headers: {
-            "Authorization": "Bearer " + token,
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        body: JSON.stringify(payload)
+        headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json", "Accept": "application/json" },
+        parameters: payload,
+        param_type: 1
     });
 
-    if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('Resposta erro DMS:', errorBody);
-        throw new Error('Erro ao inserir entidade no DMS: ' + response.statusText);
-    }
-
-    return await response.json();
+    console.log('DMS inserir result:', result);
+    return result.details.statusMessage;
 }
 
 

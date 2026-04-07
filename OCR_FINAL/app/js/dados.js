@@ -43,6 +43,8 @@ function mostrarDados(dados) {
     });
 
     camposDados.innerHTML = html;
+
+
     checkConfirmar.checked = false;
     checkConfirmar.disabled = false;
     btnInserir.disabled = true;
