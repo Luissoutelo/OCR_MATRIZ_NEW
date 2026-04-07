@@ -44,6 +44,51 @@ async function get_token_dms() {
     return { token: tokenData.access_token, url };
 }
 
+// ===== LER CREDENCIAIS OCR DAS ORG VARIABLES DO ZOHO CRM =====
+const crmVarsOCR = async () => {
+    const urlVar = AMBIENTE === 'prod' ? 'url_api_grupo_jap' : 'url_api_grupo_jap_qa';
+
+    const [url, clientSecret, clientId, password, username] = await Promise.all([
+        ZOHO.CRM.API.getOrgVariable(urlVar).then(d => d.Success.Content),
+        ZOHO.CRM.API.getOrgVariable('client_secret_api_grupo_jap').then(d => d.Success.Content),
+        ZOHO.CRM.API.getOrgVariable('client_id_api_grupo_jap').then(d => d.Success.Content),
+        ZOHO.CRM.API.getOrgVariable('password_api_grupo_jap').then(d => d.Success.Content),
+        ZOHO.CRM.API.getOrgVariable('username_api_grupo_jap').then(d => d.Success.Content),
+    ]);
+
+    return { url, clientSecret, clientId, password, username };
+};
+
+// ===== OBTER TOKEN DE AUTENTICAÇÃO OCR =====
+async function get_token_ocr() {
+    const { url, clientSecret, clientId, password, username } = await crmVarsOCR();
+
+    const parameters = new URLSearchParams();
+    parameters.append("grant_type", "password");
+    parameters.append("client_id", clientId);
+    parameters.append("client_secret", clientSecret);
+    parameters.append("username", username);
+    parameters.append("password", password);
+
+    const response = await fetch(url + "token", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json"
+        },
+        body: parameters
+    });
+
+    if (!response.ok) {
+        const errorBody = await response.text();
+        console.error('Resposta erro OCR token:', errorBody);
+        throw new Error('Erro ao obter token OCR: ' + response.statusText);
+    }
+
+    const tokenData = await response.json();
+    return { token: tokenData.access_token, url };
+}
+
 // ===== PESQUISAR NIF NO DMS =====
 async function procurar_nif_dms(nif) {
     const { token, url } = await get_token_dms();
