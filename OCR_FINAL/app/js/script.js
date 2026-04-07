@@ -283,27 +283,8 @@ document.addEventListener('DOMContentLoaded', function () {
         btnProcess.disabled = true;
 
         try {
-            // const OCR_ENDPOINT = 'COLOCAR_URL_AQUI';
-            // const respostas = await Promise.all(selectedFiles.map(async (file) => {
-            //     const formData = new FormData();
-            //     formData.append('documento', file);
-            //     const res = await fetch(OCR_ENDPOINT, { method: 'POST', body: formData });
-            //     if (!res.ok) throw new Error('Erro no endpoint OCR');
-            //     return res.json();
-            // }));
-            // const dadosOCR = { ...respostas[0], ...respostas[1] };
-
-            // TODO: remover simulação quando endpoint estiver pronto
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            const dadosOCR = {
-                nome: "Maria Silva",
-                nif: "248759248",
-                numeroDocumento: "111222111",
-                dataValidade: "15/03/2029",
-                confianca: { nome: 95, numeroDocumento: 88, dataValidade: 92, nif: 87 },
-                entity: zohoEntity
-            };
+            const dadosOCR = await processar_fotos_cc(selectedFiles);
+            dadosOCR.entity = zohoEntity;
 
             selectedFiles = [];
             updateFileList();
