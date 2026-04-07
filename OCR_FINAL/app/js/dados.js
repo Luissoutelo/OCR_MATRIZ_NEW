@@ -71,7 +71,7 @@ function mostrarDados(dados) {
 
 
     checkConfirmar.checked = false;
-    checkConfirmar.disabled = false;
+    checkConfirmar.disabled = true;
     btnInserir.disabled = true;
     document.getElementById('avisoNIF').style.display = 'none';
     document.getElementById('headerSubtitle').textContent = 'Analise os dados obtidos pelo sistema';
@@ -81,8 +81,6 @@ function mostrarDados(dados) {
     // Verificar se o NIF tem 9 dígitos
     const nifDigitos = dados.nif ? dados.nif.replace(/\D/g, '') : '';
     if (nifDigitos.length !== 9) {
-        checkConfirmar.disabled = true;
-        btnInserir.disabled = true;
         document.getElementById('avisoNIF').style.display = 'block';
         document.getElementById('avisoNIF').textContent = `⚠️ O NIF obtido (${dados.nif || 'vazio'}) não contém
          9 dígitos. Por favor, reenicie o processo.`;
@@ -96,17 +94,16 @@ function mostrarDados(dados) {
             const avisoNIF = document.getElementById('avisoNIF');
             if (existeZoho && existeDMS) {
                 avisoNIF.textContent = `⚠️ O NIF ${dados.nif} já está registado no Zoho CRM para a entidade "${existeZoho}" e também no DMS.`;
-            }
-            else if (existeZoho && !existeDMS) {
+            } else if (existeZoho && !existeDMS) {
                 avisoNIF.textContent = `⚠️ O NIF ${dados.nif} já está registado no Zoho CRM para a entidade "${existeZoho}".`;
             } else if (existeDMS && !existeZoho) {
                 avisoNIF.textContent = `⚠️ O NIF ${dados.nif} já existe associado a uma entidade no DMS.`;
             }
 
             if (existeZoho || existeDMS) {
-                checkConfirmar.disabled = true;
-                btnInserir.disabled = true;
                 avisoNIF.style.display = 'block';
+            } else {
+                checkConfirmar.disabled = false;
             }
         });
     }
