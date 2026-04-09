@@ -4,6 +4,7 @@ const CAMPOS = [
     { key: 'nome', label: 'Nome Completo', readonly: false, largura: true },
     { key: 'numeroDocumento', label: 'Número do Documento', readonly: false },
     { key: 'dataValidade', label: 'Data de Validade', readonly: false },
+    { key: 'dataNascimento', label: 'Data de Nascimento', readonly: false },
     { key: 'nif', label: 'NIF', readonly: true },
 ];
 
@@ -16,7 +17,6 @@ let _dadosOCRExtras = {};
 
 function mostrarDados(dados) {
     _dadosOCRExtras = {
-        dataNascimento: dados.dataNascimento || null,
         genero: dados.genero || null,
         nacionalidade: dados.nacionalidade || null,
     };
