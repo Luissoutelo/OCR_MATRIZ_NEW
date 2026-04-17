@@ -161,11 +161,10 @@ html, body {
             padding: 2px 7px;
             border-radius: 20px;
             font-weight: 600;
+            background-color: #dbeafe;
+            color: #1e40af;
+            cursor: default;
         }
-
-        .badge-alta { background-color: #d1fae5; color: #065f46; }
-        .badge-media { background-color: #fef9c3; color: #713f12; }
-        .badge-baixa { background-color: #fee2e2; color: #7f1d1d; }
 
         /* ===== ESTILOS PARA TELEMÓVEL ===== */
         @media (max-width: 576px) {

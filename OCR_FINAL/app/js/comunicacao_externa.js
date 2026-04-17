@@ -54,32 +54,42 @@ const crmVarsOCR = async () => {
 
 // ===== OBTER TOKEN DE AUTENTICAÇÃO OCR =====
 async function get_token_ocr() {
-    const { url, clientSecret, clientId, password, username } = await crmVarsOCR();
+    let url;
+    try {
+        const vars = await crmVarsOCR();
+        url = vars.url;
+        const { clientSecret, clientId, password, username } = vars;
 
-    const parameters = new URLSearchParams();
-    parameters.append("grant_type", "password");
-    parameters.append("client_id", clientId);
-    parameters.append("client_secret", clientSecret);
-    parameters.append("username", username);
-    parameters.append("password", password);
+        const parameters = new URLSearchParams();
+        parameters.append("grant_type", "password");
+        parameters.append("client_id", clientId);
+        parameters.append("client_secret", clientSecret);
+        parameters.append("username", username);
+        parameters.append("password", password);
 
-    const response = await fetch(url + "token", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json"
-        },
-        body: parameters
-    });
+        const response = await fetch(url + "token", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Accept": "application/json"
+            },
+            body: parameters
+        });
 
-    if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('Resposta erro OCR token:', errorBody);
-        throw new Error('Erro ao obter token OCR: ' + response.statusText);
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error('[OCR] get_token_ocr: falha ao obter token', { status: response.status, statusText: response.statusText, body: errorBody });
+            throw new Error('Erro ao obter token OCR: ' + response.statusText);
+        }
+
+        const tokenData = await response.json();
+        return { token: tokenData.access_token, url, username };
+    } catch (err) {
+        if (!(err.message.startsWith('Erro ao obter token'))) {
+            console.error('[OCR] get_token_ocr: erro inesperado', { url, erro: err.message, stack: err.stack });
+        }
+        throw err;
     }
-
-    const tokenData = await response.json();
-    return { token: tokenData.access_token, url, username };
 }
 
 // ===== PESQUISAR NIF NO DMS =====
@@ -180,24 +190,33 @@ async function enviar_foto_ocr(ficheiro, token, url, username) {
     const formData = new FormData();
     formData.append('File', ficheiro);
 
-    const response = await fetch(`${url}api/ai/document-extraction?${params}`, {
-        method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + token },
-        body: formData
-    });
+    let response;
+    try {
+        response = await fetch(`${url}api/ai/document-extraction?${params}`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token },
+            body: formData
+        });
+    } catch (err) {
+        console.error('[OCR] enviar_foto_ocr: falha de rede', { ficheiro: ficheiro.name, tamanhoKB: (ficheiro.size/1024).toFixed(1), erro: err.message });
+        throw err;
+    }
 
-    if (!response.ok) throw new Error('Erro no OCR: ' + response.statusText);
-    const dados = await response.json();
-    console.log('Resposta OCR:', dados);
-    return dados;
+    if (!response.ok) {
+        const errorBody = await response.text();
+        console.error('[OCR] enviar_foto_ocr: resposta de erro', { ficheiro: ficheiro.name, status: response.status, statusText: response.statusText, body: errorBody });
+        throw new Error('Erro no OCR: ' + response.statusText);
+    }
+
+    return response.json();
 }
 
 // ===== OCR: IDENTIFICAR FRENTE OU VERSO DO CC =====
 function identificar_frente_verso(resposta) {
     const obj = resposta?.Object;
     if (!obj) return null;
-    if (obj.FirstName != null || obj.LastName != null || obj.DocumentNumber != null) return 'frente';
-    if (obj.TaxNumber != null || obj.DateOfBirth != null || obj.HealthNumber != null) return 'verso';
+    if (obj.FirstName?.value != null || obj.LastName?.value != null || obj.DocumentNumber?.value != null) return 'frente';
+    if (obj.TaxNumber?.value != null || obj.DateOfBirth?.value != null || obj.HealthNumber?.value != null) return 'verso';
     return null;
 }
 
@@ -212,6 +231,10 @@ async function processar_fotos_cc(ficheiros) {
 
     const lado1 = identificar_frente_verso(resposta1);
     const lado2 = identificar_frente_verso(resposta2);
+
+    if (!lado1 && !lado2) {
+        console.error('[OCR] processar_fotos_cc: não foi possível identificar frente/verso', { resposta1, resposta2 });
+    }
 
     let frente, verso;
     if (lado1 === 'frente') {
@@ -228,14 +251,25 @@ async function processar_fotos_cc(ficheiros) {
         verso = resposta2.Object;
     }
 
-    return {
-        nome: [frente?.FirstName, frente?.LastName].filter(Boolean).join(' ') || null,
-        nif: verso?.TaxNumber || frente?.TaxNumber || null,
-        numeroDocumento: frente?.DocumentNumber || null,
-        dataValidade: formatar_data_ocr(frente?.DateOfExpiration),
-        dataNascimento: formatar_data_ocr(verso?.DateOfBirth || frente?.DateOfBirth),
-        genero: frente?.Sex || null,
-        nacionalidade: frente?.Nacionality || null,
+    const confPct = (campo) => campo?.confidence != null ? Math.round(campo.confidence * 100) : undefined;
+    const nomeConfs = [frente?.FirstName, frente?.LastName].map(confPct).filter(v => v !== undefined);
+
+    const resultado = {
+        nome: [frente?.FirstName?.value, frente?.LastName?.value].filter(Boolean).join(' ') || null,
+        nif: frente?.TaxNumber?.value || verso?.TaxNumber?.value || null,
+        numeroDocumento: frente?.DocumentNumber?.value || null,
+        dataValidade: formatar_data_ocr(frente?.DateOfExpiration?.value),
+        dataNascimento: formatar_data_ocr(verso?.DateOfBirth?.value || frente?.DateOfBirth?.value),
+        genero: frente?.Sex?.value || null,
+        nacionalidade: frente?.Nacionality?.value || null,
+        confianca: {
+            nome: nomeConfs.length ? Math.round(nomeConfs.reduce((a, b) => a + b, 0) / nomeConfs.length) : undefined,
+            nif: confPct(frente?.TaxNumber) ?? confPct(verso?.TaxNumber),
+            numeroDocumento: confPct(frente?.DocumentNumber),
+            dataValidade: confPct(frente?.DateOfExpiration),
+            dataNascimento: confPct(verso?.DateOfBirth) ?? confPct(frente?.DateOfBirth),
+        },
     };
+    return resultado;
 }
 

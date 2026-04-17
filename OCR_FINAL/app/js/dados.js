@@ -8,9 +8,9 @@ const CAMPOS = [
     { key: 'nif', label: 'NIF', readonly: true },
 ];
 
-function badgeConfianca(valor) {
-    const cls = valor >= 90 ? 'badge-alta' : valor >= 75 ? 'badge-media' : 'badge-baixa';
-    return `<span class="badge-confianca ${cls}">${valor}%</span>`;
+function tooltipConfianca(valor) {
+    if (valor === undefined) return '';
+    return `<span class="badge-confianca" title="Microsoft Azure">${valor}%</span>`;
 }
 
 let _dadosOCRExtras = {};
@@ -41,7 +41,7 @@ function mostrarDados(dados) {
                 </div>
                 <div class="d-flex justify-content-between align-items-center gap-2">
                     <span class="campo-label-novo" style="white-space:nowrap;">
-                        ${campo.label} (novo) ${conf !== undefined ? badgeConfianca(conf) : ''}
+                        ${campo.label} (novo) ${conf !== undefined ? tooltipConfianca(conf) : ''}
                     </span>
                     <input type="text" class="form-control form-control-sm campo-input"
                            id="campo_${campo.key}" value="${valor}"
@@ -57,7 +57,7 @@ function mostrarDados(dados) {
                 </div>
                 <div class="d-flex justify-content-between align-items-center gap-2">
                     <span class="campo-label-novo">
-                        ${campo.label} (novo) ${conf !== undefined ? badgeConfianca(conf) : ''}
+                        ${campo.label} (novo) ${conf !== undefined ? tooltipConfianca(conf) : ''}
                     </span>
                     <input type="text" class="form-control form-control-sm campo-input"
                            id="campo_${campo.key}" value="${valor}"
@@ -133,9 +133,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // Validar data de validade com o valor final (editado pelo user)
+        // Formato da data: DD/MM/YYYY
         const valorData = dadosFinais.dataValidade;
         if (valorData) {
-            const dataValidade = new Date(valorData);
+            const partes = valorData.split('/');
+            const dataValidade = partes.length === 3
+                ? new Date(partes[2], partes[1] - 1, partes[0])
+                : new Date(valorData);
             const hoje = new Date();
             hoje.setHours(0, 0, 0, 0);
             if (!isNaN(dataValidade) && dataValidade < hoje) {
