@@ -10,7 +10,7 @@ const CAMPOS = [
 
 function tooltipConfianca(valor) {
     if (valor === undefined) return '';
-    return `<span class="badge-confianca" title="Microsoft Azure">${valor}%</span>`;
+    return `<span class="badge-confianca" title="Percentagens provenientes do Microsoft Azure">${valor}%</span>`;
 }
 
 let _dadosOCRExtras = {};
@@ -152,9 +152,12 @@ document.addEventListener('DOMContentLoaded', function () {
         btnInserir.textContent = 'A inserir...';
 
         const dadosParaDMS = { ...dadosFinais, ..._dadosOCRExtras };
+        const payloadDMS = construirPayloadDMS(dadosParaDMS);
+        console.log('[DEBUG] dadosParaDMS:', dadosParaDMS);
+        console.log('[DEBUG] payload enviado ao DMS:', payloadDMS);
 
         try {
-            await inserir_entidade_dms(construirPayloadDMS(dadosParaDMS));
+            await inserir_entidade_dms(payloadDMS);
         } catch (error) {
             alert('Erro ao criar entidade no DMS. Por favor tente novamente.');
             btnInserir.disabled = false;
