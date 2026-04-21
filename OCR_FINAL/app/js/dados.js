@@ -39,13 +39,13 @@ function mostrarDados(dados) {
                     <span class="campo-label">${campo.label}</span>
                     <span class="campo-valor-original">${valor}</span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center gap-2">
+                <div class="d-flex justify-content-between align-items-center gap-2 campo-novo-row">
                     <span class="campo-label-novo" style="white-space:nowrap;">
                         ${campo.label} (novo) ${conf !== undefined ? tooltipConfianca(conf) : ''}
                     </span>
                     <input type="text" class="form-control form-control-sm campo-input"
                            id="campo_${campo.key}" value="${valor}"
-                           style="width:50%;" ${readonlyAttr} ${bgReadonly}>
+                           ${readonlyAttr} ${bgReadonly}>
                 </div>
             </div>`;
         } else {
@@ -55,7 +55,7 @@ function mostrarDados(dados) {
                     <span class="campo-label">${campo.label}</span>
                     <span class="campo-valor-original">${valor}</span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center gap-2">
+                <div class="d-flex justify-content-between align-items-center gap-2 campo-novo-row">
                     <span class="campo-label-novo">
                         ${campo.label} (novo) ${conf !== undefined ? tooltipConfianca(conf) : ''}
                     </span>

@@ -67,26 +67,40 @@ async function get_token_ocr() {
         parameters.append("username", username);
         parameters.append("password", password);
 
-        const response = await fetch(url + "token", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Accept": "application/json"
-            },
-            body: parameters
-        });
+        const tokenController = new AbortController();
+        const tokenTimeout = setTimeout(() => tokenController.abort(), 10000);
+
+        let response;
+        try {
+            response = await fetch(url + "token", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Accept": "application/json"
+                },
+                body: parameters,
+                signal: tokenController.signal
+            });
+        } finally {
+            clearTimeout(tokenTimeout);
+        }
 
         if (!response.ok) {
             const errorBody = await response.text();
             console.error('[OCR] get_token_ocr: falha ao obter token', { status: response.status, statusText: response.statusText, body: errorBody });
-            throw new Error('Erro ao obter token OCR: ' + response.statusText);
+            throw new Error('Não foi possível autenticar no serviço OCR.');
         }
 
         const tokenData = await response.json();
         return { token: tokenData.access_token, url, username };
     } catch (err) {
-        if (!(err.message.startsWith('Erro ao obter token'))) {
+        if (err.name === 'AbortError') {
+            console.error('[OCR] get_token_ocr: timeout (10s)');
+            throw new Error('Tempo limite excedido ao autenticar. Verifique a sua ligação e tente novamente.');
+        }
+        if (!err.message.startsWith('Não foi possível autenticar') && !err.message.startsWith('Tempo limite')) {
             console.error('[OCR] get_token_ocr: erro inesperado', { url, erro: err.message, stack: err.stack });
+            throw new Error('Erro de ligação ao serviço OCR. Verifique a sua ligação e tente novamente.');
         }
         throw err;
     }
@@ -190,22 +204,35 @@ async function enviar_foto_ocr(ficheiro, token, url, username) {
     const formData = new FormData();
     formData.append('File', ficheiro);
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     let response;
     try {
         response = await fetch(`${url}api/ai/document-extraction?${params}`, {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token },
-            body: formData
+            body: formData,
+            signal: controller.signal
         });
     } catch (err) {
+        if (err.name === 'AbortError') {
+            console.error('[OCR] enviar_foto_ocr: timeout (30s)', { ficheiro: ficheiro.name, tamanhoKB: (ficheiro.size/1024).toFixed(1) });
+            throw new Error('Tempo limite excedido (30s). Verifique a sua ligação e tente novamente.');
+        }
         console.error('[OCR] enviar_foto_ocr: falha de rede', { ficheiro: ficheiro.name, tamanhoKB: (ficheiro.size/1024).toFixed(1), erro: err.message });
         throw err;
+    } finally {
+        clearTimeout(timeoutId);
     }
 
     if (!response.ok) {
         const errorBody = await response.text();
         console.error('[OCR] enviar_foto_ocr: resposta de erro', { ficheiro: ficheiro.name, status: response.status, statusText: response.statusText, body: errorBody });
-        throw new Error('Erro no OCR: ' + response.statusText);
+        if (response.status === 413) throw new Error('Imagem demasiado grande. Tente com uma foto de menor resolução.');
+        if (response.status === 401 || response.status === 403) throw new Error('Sem autorização para processar o documento. Contacte o suporte.');
+        if (response.status >= 500) throw new Error('Erro no servidor OCR. Tente novamente mais tarde.');
+        throw new Error(`Erro ao processar imagem (${response.status}). Tente novamente.`);
     }
 
     return response.json();

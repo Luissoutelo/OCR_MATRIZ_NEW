@@ -151,7 +151,8 @@ html, body {
         }
 
         .campo-input {
-            width: 140px;
+            width: 45%;
+            min-width: 100px;
             flex-shrink: 0;
             text-align: right;
         }
@@ -215,5 +216,19 @@ html, body {
 
             .camera-controls button {
                 padding: 12px;
+            }
+
+            .campo-novo-row {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            .campo-novo-row .campo-input {
+                width: 100%;
+                text-align: left;
+            }
+
+            .campo-novo-row .campo-label-novo {
+                white-space: normal;
             }
         }
