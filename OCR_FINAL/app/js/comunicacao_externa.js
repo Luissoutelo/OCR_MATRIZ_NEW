@@ -1,5 +1,5 @@
 // ===== AMBIENTE: muda para 'prod' quando estiveres pronto =====
-const AMBIENTE = 'qa';
+const AMBIENTE = 'prod';
 
 // ===== LER CREDENCIAIS DAS ORG VARIABLES DO ZOHO CRM =====
 const crmVars = async () => {
@@ -29,7 +29,6 @@ async function get_token_dms() {
         param_type: 1
     });
 
-    console.log('DMS token result:', result);
     const tokenData = result.details.statusMessage;
     return { token: tokenData.access_token, url };
 }
@@ -42,7 +41,6 @@ const crmVarsOCR = async () => {
 
     const respostas = await Promise.all(nomes.map(nome =>
         ZOHO.CRM.API.getOrgVariable(nome).then(d => {
-            console.log(`OrgVar [${nome}]:`, JSON.stringify(d));
             if (!d?.Success?.Content) throw new Error(`Variável não encontrada ou vazia: ${nome}`);
             return d.Success.Content;
         })
@@ -54,12 +52,25 @@ const crmVarsOCR = async () => {
 
 // ===== OBTER TOKEN DE AUTENTICAÇÃO OCR =====
 async function get_token_ocr() {
-    let url;
-    try {
-        const vars = await crmVarsOCR();
-        url = vars.url;
-        const { clientSecret, clientId, password, username } = vars;
+    const vars = await crmVarsOCR();
+    const { url, clientSecret, clientId, password, username } = vars;
 
+    if (AMBIENTE === 'prod') {
+        const result = await ZOHO.CRM.CONNECTION.invoke('api_prod_ocr_widget', {
+            url: url + "token",
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
+            parameters: { grant_type: "password", client_id: clientId, client_secret: clientSecret, username, password },
+            param_type: 1
+        });
+        const tokenData = result.details.statusMessage;
+        if (!tokenData?.access_token) throw new Error('Não foi possível autenticar no serviço OCR.');
+        return { token: tokenData.access_token, url, username };
+    }
+
+    let fetchUrl;
+    try {
+        fetchUrl = url;
         const parameters = new URLSearchParams();
         parameters.append("grant_type", "password");
         parameters.append("client_id", clientId);
@@ -74,10 +85,7 @@ async function get_token_ocr() {
         try {
             response = await fetch(url + "token", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Accept": "application/json"
-                },
+                headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
                 body: parameters,
                 signal: tokenController.signal
             });
@@ -87,7 +95,7 @@ async function get_token_ocr() {
 
         if (!response.ok) {
             const errorBody = await response.text();
-            console.error('[OCR] get_token_ocr: falha ao obter token', { status: response.status, statusText: response.statusText, body: errorBody });
+            console.error('[OCR] get_token_ocr: falha ao obter token', { status: response.status, body: errorBody });
             throw new Error('Não foi possível autenticar no serviço OCR.');
         }
 
@@ -99,7 +107,7 @@ async function get_token_ocr() {
             throw new Error('Tempo limite excedido ao autenticar. Verifique a sua ligação e tente novamente.');
         }
         if (!err.message.startsWith('Não foi possível autenticar') && !err.message.startsWith('Tempo limite')) {
-            console.error('[OCR] get_token_ocr: erro inesperado', { url, erro: err.message, stack: err.stack });
+            console.error('[OCR] get_token_ocr: erro inesperado', { url: fetchUrl, erro: err.message });
             throw new Error('Erro de ligação ao serviço OCR. Verifique a sua ligação e tente novamente.');
         }
         throw err;
@@ -119,7 +127,6 @@ async function procurar_nif_dms(nif) {
         param_type: 1
     });
 
-    console.log('DMS NIF result:', result);
     const msg = result.details.statusMessage;
     return (msg?.clientId != null && msg?.clientId !== undefined) ? msg : null;
 }
@@ -182,7 +189,6 @@ async function inserir_entidade_dms(payload) {
         param_type: 1
     });
 
-    console.log('DMS inserir result:', result);
     return result.details.statusMessage;
 }
 
