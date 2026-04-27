@@ -1,5 +1,5 @@
 // ===== AMBIENTE: muda para 'prod' quando estiveres pronto =====
-const AMBIENTE = 'prod';
+const AMBIENTE = 'qa';
 
 // ===== LER CREDENCIAIS DAS ORG VARIABLES DO ZOHO CRM =====
 const crmVars = async () => {
@@ -79,7 +79,7 @@ async function get_token_ocr() {
         parameters.append("password", password);
 
         const tokenController = new AbortController();
-        const tokenTimeout = setTimeout(() => tokenController.abort(), 10000);
+        const tokenTimeout = setTimeout(() => tokenController.abort(), 20000);
 
         let response;
         try {
