@@ -56,7 +56,7 @@ html, body {
         .preview-active .upload-placeholder {
             display: none;
         }
-         /* Estilos adicionais para os modos */
+         
         .modos-upload {
             display: flex;
             gap: 10px;
@@ -120,6 +120,53 @@ html, body {
             font-size: 1.1rem;
         }
 
+        /* ===== SEGUNDA PÁGINA ===== */
+        .campo-dado {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 10px 0;
+        }
+
+        .campo-dado:last-child {
+            border-bottom: none;
+        }
+
+        .campo-label {
+            font-size: 0.78rem;
+            color: #6c757d;
+            margin-bottom: 1px;
+        }
+
+        .campo-label-novo {
+            font-size: 0.78rem;
+            color: #6c757d;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .campo-valor-original {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #212529;
+            text-align: right;
+        }
+
+        .campo-input {
+            width: 45%;
+            min-width: 100px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+
+        .badge-confianca {
+            font-size: 0.7rem;
+            padding: 2px 7px;
+            border-radius: 20px;
+            font-weight: 600;
+            background-color: #dbeafe;
+            color: #1e40af;
+            cursor: default;
+        }
+
         /* ===== ESTILOS PARA TELEMÓVEL ===== */
         @media (max-width: 576px) {
             header h1.display-6 {
@@ -169,5 +216,19 @@ html, body {
 
             .camera-controls button {
                 padding: 12px;
+            }
+
+            .campo-novo-row {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            .campo-novo-row .campo-input {
+                width: 100%;
+                text-align: left;
+            }
+
+            .campo-novo-row .campo-label-novo {
+                white-space: normal;
             }
         }
