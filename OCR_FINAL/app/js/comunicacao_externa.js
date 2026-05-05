@@ -1,5 +1,5 @@
 // ===== AMBIENTE: muda para 'prod' quando estiveres pronto =====
-const AMBIENTE = 'prod'; // 'qa' ou 'prod'
+const AMBIENTE = 'qa'; // 'qa' ou 'prod'
 
 // ===== LER CREDENCIAIS DAS ORG VARIABLES DO ZOHO CRM =====
 const crmVars = async () => {
@@ -15,7 +15,7 @@ const crmVars = async () => {
     });
 };
 
-// ===== OBTER TOKEN DE AUTENTICAÇÃO DO DMS =====
+// ===== OBTER TOKEN DE AUTENTICAÇÃO DO DMS =====1
 async function get_token_dms() {
     const [url, username, password, grant_type] = await crmVars();
     const connectionName = AMBIENTE === 'prod' ? 'api_prod_dms_widget' : 'api_qa_dms_recebimentos_widget';
