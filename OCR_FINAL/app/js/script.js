@@ -236,22 +236,35 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateFileList() {
-        if (selectedFiles.length === 0) { fileList.innerHTML = ''; return; }
-        let html = '<div class="list-group">';
+        const labels = ['Carregar Frente do Cartão de Cidadão', 'Carregar Verso do Cartão de Cidadão'];
+        let html = '';
+
+        if (selectedFiles.length === 0) {
+            html = `<div class="fw-bold mb-1">${labels[0]}</div>`;
+            fileList.innerHTML = html;
+            return;
+        }
+
         selectedFiles.forEach((file, index) => {
             const tamanhoKB = (file.size / 1024).toFixed(1);
             const isFoto = file.name.startsWith('foto_');
             html += `
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="me-2">${isFoto ? '📸' : '📄'}</span>
-                        ${file.name.length > 30 ? file.name.substring(0, 27) + '...' : file.name}
-                        <small class="text-muted ms-2">${tamanhoKB} KB</small>
+                <div class="fw-bold ${index === 0 ? 'mb-1' : 'mt-2 mb-1'}">${labels[index] || ''}</div>
+                <div class="list-group">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="me-2">${isFoto ? '📸' : '📄'}</span>
+                            ${file.name.length > 30 ? file.name.substring(0, 27) + '...' : file.name}
+                            <small class="text-muted ms-2">${tamanhoKB} KB</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removerFicheiro(${index})">✕</button>
                     </div>
-                    <button class="btn btn-sm btn-outline-danger" onclick="removerFicheiro(${index})">✕</button>
                 </div>`;
         });
-        html += `</div>
+        if (selectedFiles.length === 1) {
+            html += `<div class="fw-bold mt-2 mb-1">${labels[1]}</div>`;
+        }
+        html += `
             <div class="d-flex justify-content-between align-items-center mt-2">
                 <span class="text-muted small">${selectedFiles.length} de ${CONFIG.MAX_FILES}</span>
                 <span class="badge ${selectedFiles.length === CONFIG.MAX_FILES ? 'bg-success' : 'bg-warning'}">
@@ -304,6 +317,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ===== INICIALIZAÇÃO =====
+    updateFileList();
     updateProcessButton();
     if (isMobile) document.getElementById('modosBotoes').style.display = 'none';
     console.log('✅ Widget inicializado');
