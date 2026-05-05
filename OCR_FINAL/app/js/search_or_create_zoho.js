@@ -1,5 +1,13 @@
 let dadosEntidade = null;
 
+// Converte YYYY-MM-DD (formato Zoho) para DD/MM/YYYY (formato apresentação)
+function converterDataParaPT(data) {
+    if (!data) return '';
+    const partes = String(data).split('-');
+    if (partes.length !== 3) return data;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
 // ===== VERIFICAR SE A ENTIDADE JÁ TEM NIF|EMAIL|TELEFONE (ao abrir o widget) =====
 function verificarNIF(data) {
     ZOHO.CRM.API.getRecord({
@@ -15,7 +23,12 @@ function verificarNIF(data) {
             id: record.id,
             entity: data.Entity,
             email: email,
-            telefone: telefone
+            telefone: telefone,
+            nome: record.Account_Name || '',
+            numeroDocumento: record.Nr_de_identifica_o || '',
+            dataValidade: converterDataParaPT(record.Data_de_validade_Identifica_o),
+            dataNascimento: converterDataParaPT(record.DateOfBirth),
+            nif: nif || ''
         };
 
         if (nif && nif.trim() !== "") {

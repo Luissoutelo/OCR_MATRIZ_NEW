@@ -1,3 +1,7 @@
 {
-  "service": "CRM"
+  "service": "CRM",
+  "whiteListedDomains": [
+    "https://project-rainfall-20114366290.development.catalystserverless.eu",
+    "https://project-rainfall-20114366290.production.catalystserverless.eu"
+  ]
 }

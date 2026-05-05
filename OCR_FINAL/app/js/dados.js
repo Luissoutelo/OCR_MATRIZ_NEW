@@ -28,43 +28,27 @@ function mostrarDados(dados) {
 
     let html = '';
     CAMPOS.forEach(campo => {
-        const valor = dados[campo.key] || '';
+        const valorOCR = dados[campo.key] || '';
+        const valorZoho = (typeof dadosEntidade !== 'undefined' && dadosEntidade) ? (dadosEntidade[campo.key] || '') : '';
         const conf = dados.confianca?.[campo.key];
         const readonlyAttr = campo.readonly ? 'readonly' : '';
         const bgReadonly = campo.readonly ? 'style="background:#f8f9fa;"' : '';
-        if (campo.largura) {
-            html += `
+        const labelNovoStyle = campo.largura ? ' style="white-space:nowrap;"' : '';
+        html += `
             <div class="campo-dado">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <span class="campo-label">${campo.label}</span>
-                    <span class="campo-valor-original">${valor}</span>
+                    <span class="campo-valor-original">${valorZoho}</span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center gap-2 campo-novo-row">
-                    <span class="campo-label-novo" style="white-space:nowrap;">
+                    <span class="campo-label-novo"${labelNovoStyle}>
                         ${campo.label} (novo) ${conf !== undefined ? tooltipConfianca(conf) : ''}
                     </span>
                     <input type="text" class="form-control form-control-sm campo-input"
-                           id="campo_${campo.key}" value="${valor}"
+                           id="campo_${campo.key}" value="${valorOCR}"
                            ${readonlyAttr} ${bgReadonly}>
                 </div>
             </div>`;
-        } else {
-            html += `
-            <div class="campo-dado">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="campo-label">${campo.label}</span>
-                    <span class="campo-valor-original">${valor}</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center gap-2 campo-novo-row">
-                    <span class="campo-label-novo">
-                        ${campo.label} (novo) ${conf !== undefined ? tooltipConfianca(conf) : ''}
-                    </span>
-                    <input type="text" class="form-control form-control-sm campo-input"
-                           id="campo_${campo.key}" value="${valor}"
-                           ${readonlyAttr} ${bgReadonly}>
-                </div>
-            </div>`;
-        }
     });
 
     camposDados.innerHTML = html;

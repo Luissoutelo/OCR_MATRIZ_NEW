@@ -1,5 +1,5 @@
 // ===== AMBIENTE: muda para 'prod' quando estiveres pronto =====
-const AMBIENTE = 'qa';
+const AMBIENTE = 'prod'; // 'qa' ou 'prod'
 
 // ===== LER CREDENCIAIS DAS ORG VARIABLES DO ZOHO CRM =====
 const crmVars = async () => {
@@ -16,7 +16,6 @@ const crmVars = async () => {
 };
 
 // ===== OBTER TOKEN DE AUTENTICAÇÃO DO DMS =====
-
 async function get_token_dms() {
     const [url, username, password, grant_type] = await crmVars();
     const connectionName = AMBIENTE === 'prod' ? 'api_prod_dms_widget' : 'api_qa_dms_recebimentos_widget';
@@ -33,6 +32,12 @@ async function get_token_dms() {
     return { token: tokenData.access_token, url };
 }
 
+/* ============================================================
+ * VERSÃO ANTIGA — chamadas diretas ao OCR (bloqueadas por CORS)
+ * Mantida comentada para referência / rollback rápido.
+ * Substituída pelo middleware Catalyst em processar_fotos_cc.
+ * ============================================================
+ 
 // ===== LER CREDENCIAIS OCR DAS ORG VARIABLES DO ZOHO CRM =====
 const crmVarsOCR = async () => {
     const urlVar = AMBIENTE === 'prod' ? 'url_api_grupo_jap' : 'url_api_grupo_jap_qa';
@@ -114,6 +119,62 @@ async function get_token_ocr() {
     }
 }
 
+// ===== OCR: ENVIAR UMA FOTO AO ENDPOINT =====
+async function enviar_foto_ocr(ficheiro, token, url, username) {
+    const params = new URLSearchParams({ DocumentTypeId: '3', CompanyId: '9', Username: username });
+    const formData = new FormData();
+    formData.append('File', ficheiro);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    let response;
+    try {
+        response = await fetch(`${url}api/ai/document-extraction?${params}`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token },
+            body: formData,
+            signal: controller.signal
+        });
+    } catch (err) {
+        if (err.name === 'AbortError') {
+            console.error('[OCR] enviar_foto_ocr: timeout (30s)', { ficheiro: ficheiro.name, tamanhoKB: (ficheiro.size/1024).toFixed(1) });
+            throw new Error('Tempo limite excedido (30s). Verifique a sua ligação e tente novamente.');
+        }
+        console.error('[OCR] enviar_foto_ocr: falha de rede', { ficheiro: ficheiro.name, tamanhoKB: (ficheiro.size/1024).toFixed(1), erro: err.message });
+        throw err;
+    } finally {
+        clearTimeout(timeoutId);
+    }
+
+    if (!response.ok) {
+        const errorBody = await response.text();
+        console.error('[OCR] enviar_foto_ocr: resposta de erro', { ficheiro: ficheiro.name, status: response.status, statusText: response.statusText, body: errorBody });
+        if (response.status === 413) throw new Error('Imagem demasiado grande. Tente com uma foto de menor resolução.');
+        if (response.status === 401 || response.status === 403) throw new Error('Sem autorização para processar o documento. Contacte o suporte.');
+        if (response.status >= 500) throw new Error('Erro no servidor OCR. Tente novamente mais tarde.');
+        throw new Error(`Erro ao processar imagem (${response.status}). Tente novamente.`);
+    }
+
+    return response.json();
+}
+
+// ===== VERSÃO ANTIGA DE processar_fotos_cc =====
+async function processar_fotos_cc_OLD(ficheiros) {
+    const { token, url, username } = await get_token_ocr();
+
+    const [resposta1, resposta2] = await Promise.all([
+        enviar_foto_ocr(ficheiros[0], token, url, username),
+        enviar_foto_ocr(ficheiros[1], token, url, username)
+    ]);
+
+    const lado1 = identificar_frente_verso(resposta1);
+    const lado2 = identificar_frente_verso(resposta2);
+    // ... (resto da lógica antiga)
+}
+
+============================================================ */
+
 // ===== PESQUISAR NIF NO DMS =====
 async function procurar_nif_dms(nif) {
     const { token, url } = await get_token_dms();
@@ -155,9 +216,9 @@ function construirPayloadDMS(dadosFinais) {
         validateCitizenCard: converterDataDMS(dadosFinais.dataValidade),
         email: dadosEntidade.email,
         mobileContact: dadosEntidade.telefone,
-        birthDate: converterDataDMS(dadosFinais.dataNascimento) || "01-01-2000",      // TODO: virá do OCR
-        genderId: dadosFinais.genero || "M",                       // TODO: virá do OCR
-        nationalityCountryID: MAPA_NACIONALIDADE[dadosFinais.nacionalidade] || "PT", // TODO: virá do OCR
+        birthDate: converterDataDMS(dadosFinais.dataNascimento) || "01-01-2000",
+        genderId: dadosFinais.genero || "M",
+        nationalityCountryID: MAPA_NACIONALIDADE[dadosFinais.nacionalidade] || "PT",
         // Campos fixos obrigatórios pelo DMS
         gdpr1MatrizCommunication: false,
         gdpr2ProfileCreation: false,
@@ -204,46 +265,6 @@ function formatar_data_ocr(dataStr) {
     return `${dia.padStart(2, '0')}/${mesNum}/${ano}`;
 }
 
-// ===== OCR: ENVIAR UMA FOTO AO ENDPOINT =====
-async function enviar_foto_ocr(ficheiro, token, url, username) {
-    const params = new URLSearchParams({ DocumentTypeId: '3', CompanyId: '9', Username: username });
-    const formData = new FormData();
-    formData.append('File', ficheiro);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-    let response;
-    try {
-        response = await fetch(`${url}api/ai/document-extraction?${params}`, {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token },
-            body: formData,
-            signal: controller.signal
-        });
-    } catch (err) {
-        if (err.name === 'AbortError') {
-            console.error('[OCR] enviar_foto_ocr: timeout (30s)', { ficheiro: ficheiro.name, tamanhoKB: (ficheiro.size/1024).toFixed(1) });
-            throw new Error('Tempo limite excedido (30s). Verifique a sua ligação e tente novamente.');
-        }
-        console.error('[OCR] enviar_foto_ocr: falha de rede', { ficheiro: ficheiro.name, tamanhoKB: (ficheiro.size/1024).toFixed(1), erro: err.message });
-        throw err;
-    } finally {
-        clearTimeout(timeoutId);
-    }
-
-    if (!response.ok) {
-        const errorBody = await response.text();
-        console.error('[OCR] enviar_foto_ocr: resposta de erro', { ficheiro: ficheiro.name, status: response.status, statusText: response.statusText, body: errorBody });
-        if (response.status === 413) throw new Error('Imagem demasiado grande. Tente com uma foto de menor resolução.');
-        if (response.status === 401 || response.status === 403) throw new Error('Sem autorização para processar o documento. Contacte o suporte.');
-        if (response.status >= 500) throw new Error('Erro no servidor OCR. Tente novamente mais tarde.');
-        throw new Error(`Erro ao processar imagem (${response.status}). Tente novamente.`);
-    }
-
-    return response.json();
-}
-
 // ===== OCR: IDENTIFICAR FRENTE OU VERSO DO CC =====
 function identificar_frente_verso(resposta) {
     const obj = resposta?.Object;
@@ -253,20 +274,65 @@ function identificar_frente_verso(resposta) {
     return null;
 }
 
-// ===== OCR: PROCESSAR AS DUAS FOTOS E DEVOLVER DADOS MAPEADOS =====
+
+ // ===== OCR: PROCESSAR AS DUAS FOTOS VIA CATALYST (chamada server-side via ZOHO.CRM.HTTP) =====
 async function processar_fotos_cc(ficheiros) {
-    const { token, url, username } = await get_token_ocr();
-
-    const [resposta1, resposta2] = await Promise.all([
-        enviar_foto_ocr(ficheiros[0], token, url, username),
-        enviar_foto_ocr(ficheiros[1], token, url, username)
+    const URL_MIDDLEWARE = "https://project-rainfall-20114366290.development.catalystserverless.eu/server/jap_f060_middleware_ocr/ocr";
+    
+    // Converter ficheiros para base64
+    const ficheiroParaBase64 = (ficheiro) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(ficheiro);
+    });
+    
+    const [foto1Base64, foto2Base64] = await Promise.all([
+        ficheiroParaBase64(ficheiros[0]),
+        ficheiroParaBase64(ficheiros[1])
     ]);
-
+    
+    // Chamar via ZOHO.CRM.HTTP.post (server-side, não passa pelo browser)
+    let response;
+    try {
+        response = await ZOHO.CRM.HTTP.post({
+            url: URL_MIDDLEWARE,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                foto1Base64,
+                foto1Mime: ficheiros[0].type,
+                foto2Base64,
+                foto2Mime: ficheiros[1].type,
+                ambiente: AMBIENTE
+            })
+        });
+    } catch (err) {
+        console.error('[OCR] Erro ZOHO.CRM.HTTP.post', err);
+        throw new Error('Erro de ligação ao serviço OCR. Tente novamente.');
+    }
+    
+    console.log('[OCR] Resposta bruta:', response);
+    
+    // ZOHO.CRM.HTTP devolve uma string com a resposta
+    let dados;
+    try {
+        dados = typeof response === 'string' ? JSON.parse(response) : response;
+    } catch (err) {
+        console.error('[OCR] Resposta não é JSON válido:', response);
+        throw new Error('Resposta inválida do serviço OCR.');
+    }
+    
+    const { resposta1, resposta2 } = dados;
+    
+    console.log('[OCR] Resposta 1:', resposta1);
+    console.log('[OCR] Resposta 2:', resposta2);
+    
+    // ===== Identificar frente/verso =====
     const lado1 = identificar_frente_verso(resposta1);
     const lado2 = identificar_frente_verso(resposta2);
 
     if (!lado1 && !lado2) {
-        console.error('[OCR] processar_fotos_cc: não foi possível identificar frente/verso', { resposta1, resposta2 });
+        console.error('[OCR] não foi possível identificar frente/verso', { resposta1, resposta2 });
     }
 
     let frente, verso;
@@ -287,7 +353,7 @@ async function processar_fotos_cc(ficheiros) {
     const confPct = (campo) => campo?.confidence != null ? Math.round(campo.confidence * 100) : undefined;
     const nomeConfs = [frente?.FirstName, frente?.LastName].map(confPct).filter(v => v !== undefined);
 
-    const resultado = {
+    return {
         nome: [frente?.FirstName?.value, frente?.LastName?.value].filter(Boolean).join(' ') || null,
         nif: frente?.TaxNumber?.value || verso?.TaxNumber?.value || null,
         numeroDocumento: frente?.DocumentNumber?.value || null,
@@ -303,6 +369,4 @@ async function processar_fotos_cc(ficheiros) {
             dataNascimento: confPct(verso?.DateOfBirth) ?? confPct(frente?.DateOfBirth),
         },
     };
-    return resultado;
 }
-
