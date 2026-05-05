@@ -15,7 +15,12 @@ function verificarNIF(data) {
             id: record.id,
             entity: data.Entity,
             email: email,
-            telefone: telefone
+            telefone: telefone,
+            nome: record.Account_Name || '',
+            numeroDocumento: record.Nr_de_identifica_o || '',
+            dataValidade: formatarDataZohoParaPT(record.Data_de_validade_Identifica_o),
+            dataNascimento: formatarDataZohoParaPT(record.DateOfBirth),
+            nif: nif || ''
         };
 
         if (nif && nif.trim() !== "") {
@@ -40,6 +45,14 @@ function converterData(data) {
     const partes = data.split('/');
     if (partes.length !== 3) return data;
     return `${partes[2]}-${partes[1]}-${partes[0]}`;
+}
+
+// Converte YYYY-MM-DD (Zoho) para DD/MM/YYYY (display)
+function formatarDataZohoParaPT(data) {
+    if (!data) return '';
+    const partes = String(data).split('-');
+    if (partes.length !== 3) return data;
+    return `${partes[2]}/${partes[1]}/${partes[0]}`;
 }
 
 // ===== PESQUISAR SE UM NIF JÁ EXISTE NO ZOHO CRM =====
